@@ -1,5 +1,5 @@
-﻿# Created by https://www.toptal.com/developers/gitignore/api/rider,visualstudio,jetbrains+all,csharp,aspnetcore
-# Edit at https://www.toptal.com/developers/gitignore?templates=rider,visualstudio,jetbrains+all,csharp,aspnetcore
+# Created by https://www.toptal.com/developers/gitignore/api/csharp,rider,visualstudio,visualstudiocode,aspnetcore,jetbrains+all,database
+# Edit at https://www.toptal.com/developers/gitignore?templates=csharp,rider,visualstudio,visualstudiocode,aspnetcore,jetbrains+all,database
 
 ### ASPNETCore ###
 ## Ignore Visual Studio temporary files, build results, and
@@ -523,6 +523,15 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 
+### Database ###
+*.accdb
+*.db
+*.dbf
+*.mdb
+*.sqlite3
+*.db-shm
+*.db-wal
+
 ### JetBrains+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
@@ -659,6 +668,19 @@ fabric.properties
 # Editor-based Rest Client
 
 # Android studio 3.1+ serialized cache file
+
+### VisualStudioCode ###
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
 
 ### VisualStudio ###
 
@@ -841,4 +863,4 @@ fabric.properties
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
-# End of https://www.toptal.com/developers/gitignore/api/rider,visualstudio,jetbrains+all,csharp,aspnetcore
+# End of https://www.toptal.com/developers/gitignore/api/csharp,rider,visualstudio,visualstudiocode,aspnetcore,jetbrains+all,database
