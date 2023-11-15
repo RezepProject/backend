@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace backend.util;
 
-public class AuthenticationUtils
+public static class AuthenticationUtils
 {
     public static IConfiguration config;
 
@@ -41,9 +41,12 @@ public class AuthenticationUtils
         return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
-    public static bool VerifyPassword(string password, string hash)
+    public static bool VerifyPassword(string password, string hashedPassword)
     {
-        return BCrypt.Net.BCrypt.Verify(password, hash);
+        try
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+        } catch { return false; }
     }
 
     public static async Task<int> AuthorizeUser(WebApplication app, HttpContext context)

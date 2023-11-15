@@ -8,13 +8,14 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace backend
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            AuthenticationUtils.config = builder.Configuration;
+
             builder.Services.AddDbContext<DataContext>(options
                 => options
                     .UseNpgsql(builder.Configuration["ConnectionString"])
@@ -30,12 +31,13 @@ namespace backend
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] + ""))
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] + ""))
                 };
             });
 
-            
             builder.Services.AddControllers();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
@@ -71,8 +73,6 @@ namespace backend
                 });
             });
 
-            builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -85,14 +85,13 @@ namespace backend
             app.Use(async (context, next) =>
             {
                 var code = await AuthenticationUtils.AuthorizeUser(app, context);
-                if(code == -1) await next(context);
+                if (code == -1) await next(context);
                 else context.Response.StatusCode = code;
             });
 
             app.UseHttpsRedirection();
 
             // app.UseAuthorization();
-
 
             app.MapControllers();
 
