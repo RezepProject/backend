@@ -21,6 +21,8 @@ namespace backend
                     .UseNpgsql(builder.Configuration["ConnectionString"])
                     .UseSnakeCaseNamingConvention());
 
+            builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -85,7 +87,7 @@ namespace backend
             app.Use(async (context, next) =>
             {
                 var code = await AuthenticationUtils.AuthorizeUser(app, context);
-                if (code == -1) await next(context);
+                if (code == 301) await next(context);
                 else context.Response.StatusCode = code;
             });
 

@@ -57,14 +57,14 @@ public static class AuthenticationUtils
             var route = routeSplit?[2].Replace("Controller", "") + "." + routeSplit?[3].Split(" ")[0];
 
             // always allowed endpoint
-            if (route.Split(".")[0] == "Authentication") return -1;
+            if (route.Split(".")[0] == "Authentication") return 301;
 
             // Permission integration
             // var permissions = new List<Permission>();
             var dataContext = app.Services.CreateScope().ServiceProvider.GetRequiredService<DataContext>();
             var tmpToken = context.Request.Headers.Authorization.ToString();
 
-            if (!tmpToken.ToLower().Contains("bearer")) return 401;
+            if (!tmpToken.ToLower().Contains("bearer")) tmpToken = "Bearer " + tmpToken;
 
             var token = DecodeToken(tmpToken.Split(" ")[1]);
             var userId = token.Claims.First(c => c.Type == ClaimTypes.Sid).Value;
@@ -80,12 +80,12 @@ public static class AuthenticationUtils
             /* foreach (var p in perms)
             {
                 // * = every permission
-                if (p.Name == "*") return -1;
+                if (p.Name == "*") return 301;
                 permissions.Add(p);
             }
             if (!permissions.Select(p => p.Name).Contains(route)) return 401; */
 
-            return rank == null ? 401 : -1;
+            return rank == null ? 401 : 301;
         }
         catch { return 400; }
     }
