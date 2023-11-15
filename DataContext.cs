@@ -23,6 +23,8 @@ namespace backend
                 entityType.SetTableName(entityType.DisplayName().ToLower());
             }
 
+            modelBuilder.UseSerialColumns();
+
             Database.MigrateAsync();
             base.OnModelCreating(modelBuilder);
         }

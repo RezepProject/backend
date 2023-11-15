@@ -10,3 +10,9 @@ public class Role
 
     public List<ConfigUser>? Users { get; set; }
 }
+
+public class CreateRole
+{
+    [Required]
+    public string Name { get; set; }
+}

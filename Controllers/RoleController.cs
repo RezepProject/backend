@@ -29,7 +29,7 @@ public class RoleController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutRole(int id, Role role)
+    public async Task<IActionResult> UpdateRole(int id, Role role)
     {
         if (id != role.Id)
         {
@@ -51,12 +51,12 @@ public class RoleController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Role>> PostRole(Role role)
+    public async Task<ActionResult<Role>> CreateRole(CreateRole role)
     {
-        _context.Roles.Add(role);
+        var newRole = _context.Roles.Add(new Role { Name = role.Name });
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction("GetRole", new { id = role.Id }, role);
+        return CreatedAtAction("GetRole", new { id = newRole.Entity.Id }, role);
     }
 
     [HttpDelete("{id}")]

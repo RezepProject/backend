@@ -16,3 +16,17 @@ public class ConfigUser
     public int RoleId { get; set; }
     public Role? Role { get; set; }
 }
+
+public class CreateConfigUser
+{
+    [Required]
+    public string FirstName { get; set; }
+    [Required]
+    public string LastName { get; set; }
+    [Required, EmailAddress]
+    public string Email { get; set; }
+    [Required]
+    public string Password { get; set; }
+    [Required]
+    public int RoleId { get; set; }
+}

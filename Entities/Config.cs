@@ -9,3 +9,11 @@ public class Config
     public string Title { get; set; }
     public string Value { get; set; }
 }
+
+public class CreateConfig
+{
+    [Required]
+    public string Title { get; set; }
+    [Required]
+    public string Value { get; set; }
+}

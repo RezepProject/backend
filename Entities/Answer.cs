@@ -14,3 +14,11 @@ public class Answer
     public int QuestionId { get; set; }
     public Question? Question { get; set; }
 }
+
+public class CreateAnswer
+{
+    [Required]
+    public string Text { get; set; }
+    [Required]
+    public string User { get; set; }
+}

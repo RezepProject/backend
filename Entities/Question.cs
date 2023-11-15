@@ -10,3 +10,10 @@ public class Question
 
     public List<Answer>? Answers { get; set; }
 }
+
+public class CreateQuestion
+{
+    [Required]
+    public string Text { get; set; }
+    public List<CreateAnswer>? Answers { get; set; }
+}
