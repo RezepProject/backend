@@ -11,3 +11,21 @@
 
 1. Download and install Nugets
 2. Setup appsettings.json
+```
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "Jwt": {
+    "Key": "<HASH KEY SHA384>",
+    "Issuer": "<ADDRESS (ex. http://localhost:5260)>",
+    "Audience": "<ADDRESS (ex. http://localhost:5260)>",
+  },
+  "AllowedHosts": "*",
+  "ConnectionString": "<DB CONNECTION STRING (ex. Host=localhost;Database=rezep-database;Username=postgres;Password=postgres)>"
+}
+
+```
