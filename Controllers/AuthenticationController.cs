@@ -9,14 +9,11 @@ namespace backend.Controllers
     [Route("[controller]")]
     public class AuthenticationController : ControllerBase
     {
-        private readonly ILogger<AuthenticationController> _logger;
-
         private readonly DataContext _ctx;
 
-        public AuthenticationController(DataContext ctx, ILogger<AuthenticationController> logger)
+        public AuthenticationController(DataContext ctx)
         {
             _ctx = ctx;
-            _logger = logger;
         }
 
         [HttpPost(Name = "Authorize")]
