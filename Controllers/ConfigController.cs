@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace backend.Controllers
 {
     [ApiController]
-    [Route($"[config]")]
+    [Route("[controller]")]
     public class ConfigController : ControllerBase
     {
         private readonly DataContext _ctx;
