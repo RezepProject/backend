@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using backend.Entities;
 using backend.util;
 using Microsoft.AspNetCore.Mvc;
@@ -20,20 +21,26 @@ public class ConfigUserController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ConfigUser>> PostUser(CreateConfigUser user)
     {
-        var newUser = new ConfigUser()
+        if (await EmailIsUsed(user.Email))
+        {
+            return BadRequest("Email is already used");
+        }
+
+        var newUser = new ConfigUser
         {
             Email = user.Email,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            RoleId = user.RoleId
-            
+            RoleId = user.RoleId,
+            Password = AuthenticationUtils.HashPassword(user.Password)
         };
-        newUser.Password = AuthenticationUtils.HashPassword(user.Password);
+
         _context.ConfigUsers.Add(newUser);
         await _context.SaveChangesAsync();
 
         return CreatedAtAction("GetUser", new { id = newUser.Id }, user);
     }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ConfigUser>>> GetUsers()
     {
@@ -43,23 +50,17 @@ public class ConfigUserController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<ConfigUser>> GetUser(int id)
     {
-        var user = await _context.ConfigUsers.FindAsync(id);
-
-        if (user == null)
-        {
-            return NotFound();
-        }
-
-        return user;
+        var user = await UserExists(id);
+        return user == null ? NotFound("User not found") : user;
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id)
     {
-        var user = await _context.ConfigUsers.FindAsync(id);
+        var user = await UserExists(id);
         if (user == null)
         {
-            return NotFound();
+            return NotFound("User not found");
         }
 
         _context.ConfigUsers.Remove(user);
@@ -68,15 +69,25 @@ public class ConfigUserController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutUser(int id, ConfigUser user)
+    public async Task<IActionResult> PutUser(int id, ChangeConfigUser user)
     {
-        if (id != user.Id)
+        var userToUpdate = await UserExists(id);
+        if (userToUpdate == null)
         {
-            return BadRequest();
+            return NotFound("User not found");
         }
 
-        user.Password = AuthenticationUtils.HashPassword(user.Password);
-        _context.Entry(user).State = EntityState.Modified;
+        if (await EmailIsUsed(user.Email))
+        {
+            return BadRequest("Email is already used");
+        }
+
+        userToUpdate.Email = user.Email;
+        userToUpdate.FirstName = user.FirstName;
+        userToUpdate.LastName = user.LastName;
+        userToUpdate.RoleId = user.RoleId;
+
+        _context.ConfigUsers.Update(userToUpdate);
 
         try
         {
@@ -90,17 +101,17 @@ public class ConfigUserController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}/changepassword")]
-    public async Task<IActionResult> ChangePassword(int id, string newPassword)
+    [HttpPut("{id}/change-password")]
+    public async Task<IActionResult> ChangePassword(int id, [Required] string newPassword)
     {
-        var user = await _context.ConfigUsers.FindAsync(id);
+        var user = await UserExists(id);
         if (user == null)
         {
-            return NotFound();
+            return NotFound("User not found");
         }
 
         user.Password = AuthenticationUtils.HashPassword(newPassword);
-        _context.Entry(user).State = EntityState.Modified;
+        _context.ConfigUsers.Update(user);
 
         try
         {
@@ -112,5 +123,15 @@ public class ConfigUserController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    private async Task<ConfigUser?> UserExists(int id)
+    {
+        return await _context.ConfigUsers.FindAsync(id);
+    }
+
+    private async Task<bool> EmailIsUsed(string email)
+    {
+        return await _context.ConfigUsers.AnyAsync(user => user.Email == email);
     }
 }

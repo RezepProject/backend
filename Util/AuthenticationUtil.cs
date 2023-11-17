@@ -64,6 +64,7 @@ public static class AuthenticationUtils
             var dataContext = app.Services.CreateScope().ServiceProvider.GetRequiredService<DataContext>();
             var tmpToken = context.Request.Headers.Authorization.ToString();
 
+            if (tmpToken.IsNullOrEmpty()) return 401;
             if (!tmpToken.ToLower().Contains("bearer")) tmpToken = "Bearer " + tmpToken;
 
             var token = DecodeToken(tmpToken.Split(" ")[1]);
@@ -87,6 +88,6 @@ public static class AuthenticationUtils
 
             return rank == null ? 401 : 301;
         }
-        catch { return 400; }
+        catch { return 500; }
     }
 }

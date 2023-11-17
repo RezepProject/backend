@@ -25,18 +25,20 @@ public class RoleController : ControllerBase
     public async Task<ActionResult<Role>> GetRole(int id)
     {
         var role = await _context.Roles.FindAsync(id);
-        return role == null ? NotFound() : role;
+        return role == null ? NotFound("Role id not found!") : role;
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateRole(int id, Role role)
+    public async Task<IActionResult> UpdateRole(int id, CreateRole newRole)
     {
-        if (id != role.Id)
+        var role = await _context.Roles.FindAsync(id);
+        if (role == null)
         {
-            return BadRequest();
+            return NotFound("Role id not found!");
         }
 
-        _context.Entry(role).State = EntityState.Modified;
+        role.Name = newRole.Name;
+        _context.Roles.Update(role);
 
         try
         {
@@ -65,7 +67,7 @@ public class RoleController : ControllerBase
         var role = await _context.Roles.FindAsync(id);
         if (role == null)
         {
-            return NotFound();
+            return NotFound("Role id not found!");
         }
 
         _context.Roles.Remove(role);

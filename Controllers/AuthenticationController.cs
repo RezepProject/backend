@@ -26,10 +26,14 @@ namespace backend.Controllers
             /* var user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator);
             if (user == null) user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator); */
 
-            var user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator) ??
+            var user = await _ctx.ConfigUsers
+                           .FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator) ??
                        await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator);
 
-            if(user == null || !AuthenticationUtils.VerifyPassword(login.Password, user.Password)) return Unauthorized();
+            if (user == null || !AuthenticationUtils.VerifyPassword(login.Password, user.Password))
+            {
+                return Unauthorized();
+            }
 
             return Ok(AuthenticationUtils.GenerateJwtToken(login, user.Id));
         }
