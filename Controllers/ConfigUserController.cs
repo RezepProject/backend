@@ -49,10 +49,18 @@ public class ConfigUserController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<ConfigUser>> GetUser(int id)
+    public async Task<ActionResult<ReturnConfigUser>> GetUser(int id)
     {
         var user = await UserExists(id);
-        return user == null ? NotFound("User not found") : user;
+        return user == null
+            ? NotFound("User not found")
+            : new ReturnConfigUser()
+            {
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                RoleId = user.RoleId
+            };
     }
 
     [HttpDelete("{id:int}")]
