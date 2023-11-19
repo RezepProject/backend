@@ -21,14 +21,14 @@ public class RoleController : ControllerBase
         return await _context.Roles.ToListAsync();
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<Role>> GetRole(int id)
     {
         var role = await _context.Roles.FindAsync(id);
         return role == null ? NotFound("Role id not found!") : role;
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateRole(int id, CreateRole newRole)
     {
         var role = await _context.Roles.FindAsync(id);
@@ -61,7 +61,7 @@ public class RoleController : ControllerBase
         return CreatedAtAction("GetRole", new { id = newRole.Entity.Id }, role);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteRole(int id)
     {
         var role = await _context.Roles.FindAsync(id);

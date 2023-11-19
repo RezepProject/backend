@@ -22,3 +22,12 @@ public class CreateAnswer
     [Required]
     public string User { get; set; }
 }
+
+public class UpdateAnswer
+{
+    [Required]
+    public string Text { get; set; }
+    [Required]
+    public string User { get; set; }
+    public int? QuestionId { get; set; }
+}

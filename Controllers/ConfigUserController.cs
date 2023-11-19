@@ -19,12 +19,12 @@ public class ConfigUserController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ConfigUser>> PostUser(CreateConfigUser user)
+    public async Task<ActionResult<ConfigUser>> AddUser(CreateConfigUser user)
     {
         // TODO: check if user has the permission to add another user
         if (await EmailIsUsed(user.Email))
         {
-            return BadRequest("Email is already used");
+            return BadRequest("Email is already used!");
         }
 
         var newUser = new ConfigUser
@@ -43,19 +43,19 @@ public class ConfigUserController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ConfigUser>>> GetUsers()
+    public async Task<ActionResult<IEnumerable<string>>> GetUsers()
     {
-        return await _context.ConfigUsers.ToListAsync();
+        return await _context.ConfigUsers.Select(c => c.Email).ToListAsync();
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<ConfigUser>> GetUser(int id)
     {
         var user = await UserExists(id);
         return user == null ? NotFound("User not found") : user;
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteUser(int id)
     {
         var user = await UserExists(id);
@@ -69,8 +69,8 @@ public class ConfigUserController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutUser(int id, ChangeConfigUser user)
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> ChangeUser(int id, ChangeConfigUser user)
     {
         var userToUpdate = await UserExists(id);
         if (userToUpdate == null)
@@ -102,7 +102,7 @@ public class ConfigUserController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}/change-password")]
+    [HttpPut("{id:int}/change-password")]
     public async Task<IActionResult> ChangePassword(int id, [Required] string newPassword)
     {
         var user = await UserExists(id);

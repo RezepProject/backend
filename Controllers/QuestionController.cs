@@ -1,3 +1,4 @@
+using System.Net;
 using backend.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,21 +22,21 @@ namespace backend.Controllers
             return await _ctx.Questions.ToListAsync();
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<Question>> GetQuestion(int id)
         {
             var question = await _ctx.Questions.FindAsync(id);
 
             if (question == null)
             {
-                return NotFound("Question not found");
+                return NotFound("Question id not found!");
             }
 
             return question;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Question>> PostQuestion(Question question)
+        public async Task<ActionResult<Question>> AddQuestion(Question question)
         {
             _ctx.Questions.Add(question);
             await _ctx.SaveChangesAsync();
@@ -43,12 +44,12 @@ namespace backend.Controllers
             return CreatedAtAction("GetQuestion", new { id = question.Id }, question);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutQuestion(int id, Question question)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateQuestion(int id, Question question)
         {
             if (id != question.Id)
             {
-                return BadRequest();
+                return BadRequest("Question id not valid!");
             }
 
             _ctx.Entry(question).State = EntityState.Modified;
@@ -59,26 +60,19 @@ namespace backend.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!QuestionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return QuestionExists(id) ? StatusCode((int) HttpStatusCode.InternalServerError) : NotFound();
             }
 
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteQuestion(int id)
         {
             var question = await _ctx.Questions.FindAsync(id);
             if (question == null)
             {
-                return NotFound();
+                return NotFound("Question id not found!");
             }
 
             _ctx.Questions.Remove(question);

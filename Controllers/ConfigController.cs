@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using backend.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace backend.Controllers
@@ -23,21 +24,21 @@ namespace backend.Controllers
             return await _ctx.Configs.ToListAsync();
         }
         
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<Config>> GetConfig(int id)
         {
             var config = await _ctx.Configs.FindAsync(id);
 
             if (config == null)
             {
-                return NotFound("Config not found");
+                return NotFound("Config not found!");
             }
 
             return config;
         }
         
         [HttpPost]
-        public async Task<ActionResult<Config>> PostConfig(CreateConfig config)
+        public async Task<ActionResult<Config>> AddConfig(CreateConfig config)
         {
             var newConfig = new Config
             {
@@ -51,14 +52,14 @@ namespace backend.Controllers
             return CreatedAtAction("GetConfig", new { id = newConfig.Id }, newConfig);
         }
         
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutConfig(int id, CreateConfig config)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> ChangeConfig(int id, CreateConfig config)
         {
             var configToUpdate = await _ctx.Configs.FindAsync(id);
 
             if (configToUpdate == null)
             {
-                return NotFound("Config not found");
+                return NotFound("Config not found!");
             }
 
             configToUpdate.Title = config.Title;
@@ -70,37 +71,25 @@ namespace backend.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ConfigExists(id))
-                {
-                    return NotFound("Config not found");
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return NoContent();
         }
         
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteConfig(int id)
         {
             var config = await _ctx.Configs.FindAsync(id);
             if (config == null)
             {
-                return NotFound();
+                return NotFound("Config not found!");
             }
 
             _ctx.Configs.Remove(config);
             await _ctx.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool ConfigExists(int id)
-        {
-            return _ctx.Configs.Any(e => e.Id == id);
         }
     }
 }

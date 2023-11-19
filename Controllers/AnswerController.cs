@@ -1,3 +1,4 @@
+using System.Net;
 using backend.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,35 +22,51 @@ namespace backend.Controllers
             return await _ctx.Answers.ToListAsync();
         }
         
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<Answer>> GetAnswer(int id)
         {
             var answer = await _ctx.Answers.FindAsync(id);
 
             if (answer == null)
             {
-                return NotFound();
+                return NotFound("Answer id not found!");
             }
 
             return answer;
         }
         
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutAnswer(int id, Answer answer)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> ChangeAnswer(int id, UpdateAnswer answer)
         {
-            if (id != answer.Id)
+            var answerToUpdate = await _ctx.Answers.FindAsync(id);
+
+            if (answerToUpdate == null)
             {
-                return BadRequest();
+                return NotFound("Answer id not found!");
             }
 
-            _ctx.Entry(answer).State = EntityState.Modified;
-            await _ctx.SaveChangesAsync();
+            if (answer.QuestionId != null)
+            {
+                answerToUpdate.QuestionId = (int)answer.QuestionId;
+            }
+            answerToUpdate.Text = answer.Text;
+
+            _ctx.Entry(answerToUpdate).State = EntityState.Modified;
+
+            try
+            {
+                await _ctx.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError);
+            }
 
             return NoContent();
         }
         
         [HttpPost]
-        public async Task<ActionResult<Answer>> PostAnswer(Answer answer)
+        public async Task<ActionResult<Answer>> AddAnswer(Answer answer)
         {
             _ctx.Answers.Add(answer);
             await _ctx.SaveChangesAsync();
@@ -57,13 +74,13 @@ namespace backend.Controllers
             return CreatedAtAction("GetAnswer", new { id = answer.Id }, answer);
         }
         
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteAnswer(int id)
         {
             var answer = await _ctx.Answers.FindAsync(id);
             if (answer == null)
             {
-                return NotFound();
+                return NotFound("Answer id not found!");
             }
 
             _ctx.Answers.Remove(answer);

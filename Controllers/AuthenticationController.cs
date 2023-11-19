@@ -32,7 +32,7 @@ namespace backend.Controllers
                 return Unauthorized();
             }
 
-            return Ok(AuthenticationUtils.GenerateJwtToken(login, user.Id));
+            return Ok(AuthenticationUtils.GenerateJwtToken(login, user.Id, user.RoleId));
         }
     }
 }
