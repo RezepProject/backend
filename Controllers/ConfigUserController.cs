@@ -21,6 +21,7 @@ public class ConfigUserController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ConfigUser>> PostUser(CreateConfigUser user)
     {
+        // TODO: check if user has the permission to add another user
         if (await EmailIsUsed(user.Email))
         {
             return BadRequest("Email is already used");
