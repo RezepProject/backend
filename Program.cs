@@ -77,6 +77,13 @@ namespace backend
 
             var app = builder.Build();
 
+            // TODO: fix cors address
+            // TODO: change before production
+            app.UseCors(b => b
+                .WithOrigins("*")
+                .AllowAnyHeader()
+                .AllowAnyMethod());
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
