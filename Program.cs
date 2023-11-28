@@ -10,7 +10,7 @@ namespace backend
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +91,11 @@ namespace backend
                 app.UseSwaggerUI();
             }
 
+            using (var scope = app.Services.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<DataContext>().Database.MigrateAsync();
+            }
+
             app.Use(async (context, next) =>
             {
                 var code = await AuthenticationUtils.AuthorizeUser(app, context);
@@ -104,7 +109,7 @@ namespace backend
 
             app.MapControllers();
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

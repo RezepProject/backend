@@ -25,7 +25,6 @@ namespace backend
 
             modelBuilder.UseSerialColumns();
 
-            Database.MigrateAsync();
             base.OnModelCreating(modelBuilder);
         }
     }
