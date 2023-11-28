@@ -11,7 +11,7 @@ public static class AuthenticationUtils
 {
     public static IConfiguration config;
 
-    public static string GenerateJwtToken(Login login, int userId)
+    public static string GenerateJwtToken(Login login, int userId, int roleId)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"] + ""));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -19,6 +19,7 @@ public static class AuthenticationUtils
         {
             // save inside of token
             new Claim(ClaimTypes.NameIdentifier,login.UserIdentificator),
+            new Claim(ClaimTypes.Role, roleId.ToString()),
             new Claim(ClaimTypes.Sid, userId.ToString()),
         };
         var token = new JwtSecurityToken(config["Jwt:Issuer"],

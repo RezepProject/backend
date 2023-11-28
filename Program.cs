@@ -10,7 +10,7 @@ namespace backend
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -77,11 +77,23 @@ namespace backend
 
             var app = builder.Build();
 
+            // TODO: fix cors address
+            // TODO: change before production
+            app.UseCors(b => b
+                .WithOrigins("*")
+                .AllowAnyHeader()
+                .AllowAnyMethod());
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+            }
+
+            using (var scope = app.Services.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<DataContext>().Database.MigrateAsync();
             }
 
             app.Use(async (context, next) =>
@@ -97,7 +109,7 @@ namespace backend
 
             app.MapControllers();
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }
