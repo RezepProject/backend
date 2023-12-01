@@ -3,23 +3,29 @@ using backend.util;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace backend
 {
     public static class Program
     {
+        public static IConfiguration config;
+
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            AuthenticationUtils.config = builder.Configuration;
+            config = builder.Configuration;
 
             builder.Services.AddDbContext<DataContext>(options
                 => options
                     .UseNpgsql(builder.Configuration["ConnectionString"])
                     .UseSnakeCaseNamingConvention());
+
+            using (var context = builder.Services.BuildServiceProvider().GetRequiredService<DataContext>())
+            {
+                await context.Database.MigrateAsync();
+            }
 
             builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -89,11 +95,6 @@ namespace backend
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
-
-            using (var scope = app.Services.CreateScope())
-            {
-                await scope.ServiceProvider.GetRequiredService<DataContext>().Database.MigrateAsync();
             }
 
             app.Use(async (context, next) =>

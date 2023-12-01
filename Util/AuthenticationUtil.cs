@@ -9,11 +9,9 @@ namespace backend.util;
 
 public static class AuthenticationUtils
 {
-    public static IConfiguration config;
-
     public static string GenerateJwtToken(Login login, int userId, int roleId)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"] + ""));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Program.config["Jwt:Key"] + ""));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
         var claims = new[]
         {
@@ -22,8 +20,8 @@ public static class AuthenticationUtils
             new Claim(ClaimTypes.Role, roleId.ToString()),
             new Claim(ClaimTypes.Sid, userId.ToString()),
         };
-        var token = new JwtSecurityToken(config["Jwt:Issuer"],
-            config["Jwt:Audience"],
+        var token = new JwtSecurityToken(Program.config["Jwt:Issuer"],
+            Program.config["Jwt:Audience"],
             claims,
             expires: DateTime.UtcNow.AddMinutes(15),
             signingCredentials: credentials);

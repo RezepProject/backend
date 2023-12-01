@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using backend.Entities;
 using backend.util;
 using Microsoft.AspNetCore.Mvc;
@@ -19,15 +20,28 @@ public class ConfigUserController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ConfigUser>> AddUser(CreateConfigUser user)
+    public async Task<ActionResult> PostUser(CreateConfigUser user)
     {
-        // TODO: check if user has the permission to add another user
         if (await EmailIsUsed(user.Email))
         {
             return BadRequest("Email is already used!");
         }
 
-        var newUser = new ConfigUser
+        var userToken = new ConfigUserToken()
+        {
+            Email = user.Email,
+            RoleId = user.RoleId,
+            CreatedAt = DateTime.Now.ToUniversalTime(),
+            Token = Guid.NewGuid()
+        };
+
+        _context.ConfigUserTokens.Add(userToken);
+        await _context.SaveChangesAsync();
+
+        return MailUtil.SendMail(userToken.Email, "Test", $"{userToken.Token}") ?
+            Ok() : StatusCode((int) HttpStatusCode.InternalServerError);
+
+        /* var newUser = new ConfigUser
         {
             Email = user.Email,
             FirstName = user.FirstName,
@@ -39,31 +53,23 @@ public class ConfigUserController : ControllerBase
         _context.ConfigUsers.Add(newUser);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction("GetUser", new { id = newUser.Id }, user);
+        return CreatedAtAction("GetUser", new { id = newUser.Id }, user);*/
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<string>>> GetUsers()
+    public async Task<ActionResult<IEnumerable<ConfigUser>>> GetUsers()
     {
-        return await _context.ConfigUsers.Select(c => c.Email).ToListAsync();
+        return await _context.ConfigUsers.ToListAsync();
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<ReturnConfigUser>> GetUser(int id)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ConfigUser>> GetUser(int id)
     {
         var user = await UserExists(id);
-        return user == null
-            ? NotFound("User not found")
-            : new ReturnConfigUser()
-            {
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                RoleId = user.RoleId
-            };
+        return user == null ? NotFound("User not found") : user;
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id)
     {
         var user = await UserExists(id);
@@ -77,8 +83,8 @@ public class ConfigUserController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> ChangeUser(int id, ChangeConfigUser user)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutUser(int id, ChangeConfigUser user)
     {
         var userToUpdate = await UserExists(id);
         if (userToUpdate == null)
@@ -110,7 +116,7 @@ public class ConfigUserController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id:int}/change-password")]
+    [HttpPut("{id}/change-password")]
     public async Task<IActionResult> ChangePassword(int id, [Required] string newPassword)
     {
         var user = await UserExists(id);
