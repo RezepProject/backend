@@ -11,16 +11,16 @@ namespace backend.Controllers;
 [Route("[controller]")]
 public class ConfigUserController : ControllerBase
 {
-    private readonly DataContext _context;
+    private readonly DataContext _ctx;
 
 
-    public ConfigUserController(DataContext context)
+    public ConfigUserController(DataContext ctx)
     {
-        _context = context;
+        _ctx = ctx;
     }
 
     [HttpPost]
-    public async Task<ActionResult> PostUser(CreateConfigUser user)
+    public async Task<ActionResult> PostUser(CreateUserToken user)
     {
         if (await EmailIsUsed(user.Email))
         {
@@ -35,31 +35,17 @@ public class ConfigUserController : ControllerBase
             Token = Guid.NewGuid()
         };
 
-        _context.ConfigUserTokens.Add(userToken);
-        await _context.SaveChangesAsync();
+        _ctx.ConfigUserTokens.Add(userToken);
+        await _ctx.SaveChangesAsync();
 
         return MailUtil.SendMail(userToken.Email, "Test", $"{userToken.Token}") ?
             Ok() : StatusCode((int) HttpStatusCode.InternalServerError);
-
-        /* var newUser = new ConfigUser
-        {
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            RoleId = user.RoleId,
-            Password = AuthenticationUtils.HashPassword(user.Password)
-        };
-
-        _context.ConfigUsers.Add(newUser);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction("GetUser", new { id = newUser.Id }, user);*/
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ConfigUser>>> GetUsers()
     {
-        return await _context.ConfigUsers.ToListAsync();
+        return await _ctx.ConfigUsers.ToListAsync();
     }
 
     [HttpGet("{id}")]
@@ -78,8 +64,8 @@ public class ConfigUserController : ControllerBase
             return NotFound("User not found");
         }
 
-        _context.ConfigUsers.Remove(user);
-        await _context.SaveChangesAsync();
+        _ctx.ConfigUsers.Remove(user);
+        await _ctx.SaveChangesAsync();
         return NoContent();
     }
 
@@ -102,11 +88,11 @@ public class ConfigUserController : ControllerBase
         userToUpdate.LastName = user.LastName;
         userToUpdate.RoleId = user.RoleId;
 
-        _context.ConfigUsers.Update(userToUpdate);
+        _ctx.ConfigUsers.Update(userToUpdate);
 
         try
         {
-            await _context.SaveChangesAsync();
+            await _ctx.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -126,11 +112,11 @@ public class ConfigUserController : ControllerBase
         }
 
         user.Password = AuthenticationUtils.HashPassword(newPassword);
-        _context.ConfigUsers.Update(user);
+        _ctx.ConfigUsers.Update(user);
 
         try
         {
-            await _context.SaveChangesAsync();
+            await _ctx.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -142,11 +128,12 @@ public class ConfigUserController : ControllerBase
 
     private async Task<ConfigUser?> UserExists(int id)
     {
-        return await _context.ConfigUsers.FindAsync(id);
+        return await _ctx.ConfigUsers.FindAsync(id);
     }
 
     private async Task<bool> EmailIsUsed(string email)
     {
-        return await _context.ConfigUsers.AnyAsync(user => user.Email == email);
+        return await _ctx.ConfigUsers.AnyAsync(user => user.Email == email) ||
+               await _ctx.ConfigUserTokens.AnyAsync(user => user.Email == email);
     }
 }

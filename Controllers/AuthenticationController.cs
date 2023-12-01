@@ -34,5 +34,36 @@ namespace backend.Controllers
 
             return Ok(AuthenticationUtils.GenerateJwtToken(login, user.Id, user.RoleId));
         }
+
+        [HttpPost("applytoken")]
+        public async Task<ActionResult> ApplyToken(CreateConfigUser user)
+        {
+            var token = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(token => token.Token == user.Token);
+            if (token == null)
+            {
+                return NotFound("Token not found");
+            }
+
+            if(token.CreatedAt.ToUniversalTime().AddDays(1) < DateTime.Now.ToUniversalTime())
+            {
+                return BadRequest("Token expired");
+            }
+
+            var newUser = new ConfigUser
+            {
+                Email = token.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                RoleId = token.RoleId,
+                Password = AuthenticationUtils.HashPassword(user.Password)
+            };
+
+            _ctx.ConfigUsers.Add(newUser);
+            _ctx.ConfigUserTokens.Remove(token);
+            await _ctx.SaveChangesAsync();
+
+            var locationUri = Url.Link("GetUser", new { controller = "ConfigUser", id = newUser.Id });
+            return CreatedAtAction(locationUri, new { id = newUser.Id }, newUser);
+        }
     }
 }

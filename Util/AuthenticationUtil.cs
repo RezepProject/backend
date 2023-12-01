@@ -56,7 +56,8 @@ public static class AuthenticationUtils
             var route = routeSplit?[2].Replace("Controller", "") + "." + routeSplit?[3].Split(" ")[0];
 
             // always allowed endpoint
-            if (route.Split(".")[0] == "Authentication") return 301;
+            var endpoint = route.Split(".")[0].ToLower();
+            if (endpoint == "authentication") return 301;
 
             // Permission integration
             // var permissions = new List<Permission>();

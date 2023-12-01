@@ -32,6 +32,7 @@ namespace backend
             CreateConfig(modelBuilder);
             CreateQuestion(modelBuilder);
             CreateAnswer(modelBuilder);
+            CreateConfigUserToken(modelBuilder);
         }
 
         private static void CreateConfigUser(ModelBuilder modelBuilder)
@@ -113,6 +114,28 @@ namespace backend
                 .HasOne(a => a.Question)
                 .WithMany(q => q.Answers)
                 .HasForeignKey(a => a.QuestionId);
+        }
+
+        private static void CreateConfigUserToken(ModelBuilder modelBuilder)
+        {
+            var configUserToken = modelBuilder.Entity<ConfigUserToken>();
+            configUserToken
+                .Property(cut => cut.Id)
+                .UseIdentityColumn();
+            configUserToken
+                .Property(cut => cut.Token)
+                .IsRequired();
+            configUserToken
+                .Property(cut => cut.Email)
+                .IsRequired();
+            configUserToken
+                .Property(cut => cut.CreatedAt)
+                .IsRequired();
+            configUserToken
+                .Property(cut => cut.RoleId)
+                .IsRequired();
+            configUserToken
+                .HasOne(cut => cut.Role);
         }
     }
 }
