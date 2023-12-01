@@ -9,11 +9,9 @@ namespace backend.util;
 
 public static class AuthenticationUtils
 {
-    public static IConfiguration config;
-
     public static string GenerateJwtToken(Login login, int userId, int roleId)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"] + ""));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Program.config["Jwt:Key"] + ""));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
         var claims = new[]
         {
@@ -22,8 +20,8 @@ public static class AuthenticationUtils
             new Claim(ClaimTypes.Role, roleId.ToString()),
             new Claim(ClaimTypes.Sid, userId.ToString()),
         };
-        var token = new JwtSecurityToken(config["Jwt:Issuer"],
-            config["Jwt:Audience"],
+        var token = new JwtSecurityToken(Program.config["Jwt:Issuer"],
+            Program.config["Jwt:Audience"],
             claims,
             expires: DateTime.UtcNow.AddMinutes(15),
             signingCredentials: credentials);
@@ -58,14 +56,15 @@ public static class AuthenticationUtils
             var route = routeSplit?[2].Replace("Controller", "") + "." + routeSplit?[3].Split(" ")[0];
 
             // always allowed endpoint
-            if (route.Split(".")[0] == "Authentication") return 301;
+            var endpoint = route.Split(".")[0].ToLower();
+            if (endpoint == "authentication") return 301;
 
             // Permission integration
             // var permissions = new List<Permission>();
             var dataContext = app.Services.CreateScope().ServiceProvider.GetRequiredService<DataContext>();
             var tmpToken = context.Request.Headers.Authorization.ToString();
 
-            if (tmpToken.IsNullOrEmpty()) return 401;
+            if (tmpToken.IsNullOrEmpty() || tmpToken.ToLower() == "bearer") return 401;
             if (!tmpToken.ToLower().Contains("bearer")) tmpToken = "Bearer " + tmpToken;
 
             var token = DecodeToken(tmpToken.Split(" ")[1]);
@@ -89,6 +88,6 @@ public static class AuthenticationUtils
 
             return rank == null ? 401 : 301;
         }
-        catch { return 500; }
+        catch(Exception e) { return 500; }
     }
 }

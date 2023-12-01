@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -6,13 +7,13 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialSetup : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "configs",
+                name: "config",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
@@ -22,24 +23,11 @@ namespace backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_configs", x => x.id);
+                    table.PrimaryKey("pk_config", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "permissions",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    name = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_permissions", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "questions",
+                name: "question",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
@@ -48,11 +36,11 @@ namespace backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_questions", x => x.id);
+                    table.PrimaryKey("pk_question", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "roles",
+                name: "role",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
@@ -61,11 +49,11 @@ namespace backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_roles", x => x.id);
+                    table.PrimaryKey("pk_role", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "answers",
+                name: "answer",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
@@ -76,17 +64,17 @@ namespace backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_answers", x => x.id);
+                    table.PrimaryKey("pk_answer", x => x.id);
                     table.ForeignKey(
-                        name: "fk_answers_questions_question_id",
+                        name: "fk_answer_questions_question_id",
                         column: x => x.question_id,
-                        principalTable: "questions",
+                        principalTable: "question",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "config_users",
+                name: "configuser",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
@@ -99,23 +87,50 @@ namespace backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_config_users", x => x.id);
+                    table.PrimaryKey("pk_configuser", x => x.id);
                     table.ForeignKey(
-                        name: "fk_config_users_roles_role_id",
+                        name: "fk_configuser_roles_role_id",
                         column: x => x.role_id,
-                        principalTable: "roles",
+                        principalTable: "role",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "configusertoken",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    token = table.Column<Guid>(type: "uuid", nullable: false),
+                    email = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    role_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_configusertoken", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_configusertoken_roles_role_id",
+                        column: x => x.role_id,
+                        principalTable: "role",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ix_answers_question_id",
-                table: "answers",
+                name: "ix_answer_question_id",
+                table: "answer",
                 column: "question_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_config_users_role_id",
-                table: "config_users",
+                name: "ix_configuser_role_id",
+                table: "configuser",
+                column: "role_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_configusertoken_role_id",
+                table: "configusertoken",
                 column: "role_id");
         }
 
@@ -123,22 +138,22 @@ namespace backend.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "answers");
+                name: "answer");
 
             migrationBuilder.DropTable(
-                name: "config_users");
+                name: "config");
 
             migrationBuilder.DropTable(
-                name: "configs");
+                name: "configuser");
 
             migrationBuilder.DropTable(
-                name: "permissions");
+                name: "configusertoken");
 
             migrationBuilder.DropTable(
-                name: "questions");
+                name: "question");
 
             migrationBuilder.DropTable(
-                name: "roles");
+                name: "role");
         }
     }
 }
