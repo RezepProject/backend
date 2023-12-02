@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Text;
 using backend.Entities;
 using backend.util;
 using Microsoft.AspNetCore.Mvc;
@@ -38,8 +39,32 @@ public class ConfigUserController : ControllerBase
         _ctx.ConfigUserTokens.Add(userToken);
         await _ctx.SaveChangesAsync();
 
-        return MailUtil.SendMail(userToken.Email, "Test", $"{userToken.Token}") ?
+        return MailUtil.SendMail(userToken.Email, "Test", CreateHtmlMailTemplate(userToken.Token)) ?
             Ok() : StatusCode((int) HttpStatusCode.InternalServerError);
+    }
+
+    private static string CreateHtmlMailTemplate(Guid token)
+    {
+        var sb = new StringBuilder();
+        sb.Append("<html>");
+        sb.Append("<head>");
+        sb.Append("<style>");
+        sb.Append("body {font-family: Arial, sans-serif;}");
+        sb.Append("h1 {color: #333;}");
+        sb.Append("p {font-size: 14px;}");
+        sb.Append(".button {background-color: #4CAF50; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;}");
+        sb.Append("</style>");
+        sb.Append("</head>");
+        sb.Append("<body>");
+        sb.Append("<h1>Welcome to REZEP</h1>");
+        sb.Append("<p>Your token is: </p>");
+        sb.Append($"<p><b>{token}</b></p>");
+        sb.Append("<p>Please use this token to complete your registration process.</p>");
+        sb.Append($"<a href='http://localhost:5001/register' class='button'>Register</a>");
+        sb.Append("</body>");
+        sb.Append("</html>");
+
+        return sb.ToString();
     }
 
     [HttpGet]
