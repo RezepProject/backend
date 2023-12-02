@@ -43,9 +43,16 @@ public class ConfigUserController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ConfigUser>>> GetUsers()
+    public async Task<ActionResult<IEnumerable<ReturnConfigUser>>> GetUsers()
     {
-        return await _ctx.ConfigUsers.ToListAsync();
+        return (await _ctx.ConfigUsers.ToListAsync()).Select(user => new ReturnConfigUser()
+        {
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Id = user.Id,
+            RoleId = user.RoleId
+        }).ToList();
     }
 
     [HttpGet("{id}")]
@@ -60,6 +67,51 @@ public class ConfigUserController : ControllerBase
             Id = user.Id,
             RoleId = user.RoleId
         };
+    }
+
+    [HttpGet("invitation")]
+    public async Task<ActionResult<IEnumerable<ConfigUserToken>>> GetInvitations()
+    {
+        return await _ctx.ConfigUserTokens.ToListAsync();
+    }
+
+    [HttpGet("invitation/{token}")]
+    public async Task<ActionResult<ConfigUserToken>> GetInvitation(Guid token)
+    {
+        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Token == token);
+        return user == null ? NotFound("User not found") : user;
+    }
+
+    [HttpDelete("invitation/{token}")]
+    public async Task<IActionResult> DeleteInvitation(Guid token)
+    {
+        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Token == token);
+        if (user == null)
+        {
+            return NotFound("User not found");
+        }
+
+        _ctx.ConfigUserTokens.Remove(user);
+        await _ctx.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpPut("invitation/{token}/resend")]
+    public async Task<IActionResult> ResendInvitation(Guid token)
+    {
+        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Token == token);
+        if (user == null)
+        {
+            return NotFound("User not found");
+        }
+
+        user.Token = Guid.NewGuid();
+        user.CreatedAt = DateTime.Now.ToUniversalTime();
+        _ctx.ConfigUserTokens.Update(user);
+        await _ctx.SaveChangesAsync();
+
+        return MailUtil.SendMail(user.Email, "Test", $"{user.Token}") ?
+            Ok() : StatusCode((int) HttpStatusCode.InternalServerError);
     }
 
     [HttpDelete("{id}")]
