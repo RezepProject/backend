@@ -7,6 +7,13 @@
 3. run `docker run --name rezep-database -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres`
 4. confirm that the container is running by using the command `docker ps`
 
+### Test-User Setup
+
+```sql
+insert into role values (1, 'ADMIN');
+insert into configuser values (7,'test','test','test','$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2',1)
+```
+
 ## Setup Backend
 
 1. Download and install Nugets
