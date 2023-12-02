@@ -57,10 +57,8 @@ public class ConfigUserController : ControllerBase
         sb.Append("</head>");
         sb.Append("<body>");
         sb.Append("<h1>Welcome to REZEP</h1>");
-        sb.Append("<p>Your token is: </p>");
-        sb.Append($"<p><b>{token}</b></p>");
-        sb.Append("<p>Please use this token to complete your registration process.</p>");
-        sb.Append($"<a href='http://localhost:5001/register' class='button'>Register</a>");
+        sb.Append("<p>Please click this button to register:</p>");
+        sb.Append($"<a href='http://localhost:5001/register/{token}' class='button'>Register</a>");
         sb.Append("</body>");
         sb.Append("</html>");
 
@@ -135,7 +133,7 @@ public class ConfigUserController : ControllerBase
         _ctx.ConfigUserTokens.Update(user);
         await _ctx.SaveChangesAsync();
 
-        return MailUtil.SendMail(user.Email, "Test", $"{user.Token}") ?
+        return MailUtil.SendMail(user.Email, "Test", CreateHtmlMailTemplate(user.Token)) ?
             Ok() : StatusCode((int) HttpStatusCode.InternalServerError);
     }
 
