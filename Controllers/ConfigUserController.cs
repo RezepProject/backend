@@ -43,28 +43,6 @@ public class ConfigUserController : ControllerBase
             Ok() : StatusCode((int) HttpStatusCode.InternalServerError);
     }
 
-    private static string CreateHtmlMailTemplate(Guid token)
-    {
-        var sb = new StringBuilder();
-        sb.Append("<html>");
-        sb.Append("<head>");
-        sb.Append("<style>");
-        sb.Append("body {font-family: Arial, sans-serif;}");
-        sb.Append("h1 {color: #333;}");
-        sb.Append("p {font-size: 14px;}");
-        sb.Append(".button {background-color: #4CAF50; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;}");
-        sb.Append("</style>");
-        sb.Append("</head>");
-        sb.Append("<body>");
-        sb.Append("<h1>Welcome to REZEP</h1>");
-        sb.Append("<p>Please click this button to register:</p>");
-        sb.Append($"<a href='http://localhost:5001/register/{token}' class='button'>Register</a>");
-        sb.Append("</body>");
-        sb.Append("</html>");
-
-        return sb.ToString();
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ReturnConfigUser>>> GetUsers()
     {
@@ -98,17 +76,17 @@ public class ConfigUserController : ControllerBase
         return await _ctx.ConfigUserTokens.ToListAsync();
     }
 
-    [HttpGet("invitation/{token}")]
-    public async Task<ActionResult<ConfigUserToken>> GetInvitation(Guid token)
+    [HttpGet("invitation/{id}")]
+    public async Task<ActionResult<ConfigUserToken>> GetInvitation(int id)
     {
-        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Token == token);
+        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
         return user == null ? NotFound("User not found") : user;
     }
 
-    [HttpDelete("invitation/{token}")]
-    public async Task<IActionResult> DeleteInvitation(Guid token)
+    [HttpDelete("invitation/{id}")]
+    public async Task<IActionResult> DeleteInvitation(int id)
     {
-        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Token == token);
+        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
         if (user == null)
         {
             return NotFound("User not found");
@@ -119,10 +97,10 @@ public class ConfigUserController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("invitation/{token}/resend")]
-    public async Task<IActionResult> ResendInvitation(Guid token)
+    [HttpPost("invitation/{id}/resend")]
+    public async Task<IActionResult> ResendInvitation(int id)
     {
-        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Token == token);
+        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
         if (user == null)
         {
             return NotFound("User not found");
@@ -217,5 +195,28 @@ public class ConfigUserController : ControllerBase
     {
         return await _ctx.ConfigUsers.AnyAsync(user => user.Email == email) ||
                await _ctx.ConfigUserTokens.AnyAsync(user => user.Email == email);
+    }
+
+    private static string CreateHtmlMailTemplate(Guid token)
+    {
+        // TODO: change to file
+        var sb = new StringBuilder();
+        sb.Append("<html>");
+        sb.Append("<head>");
+        sb.Append("<style>");
+        sb.Append("body {font-family: Arial, sans-serif;}");
+        sb.Append("h1 {color: #333;}");
+        sb.Append("p {font-size: 14px;}");
+        sb.Append(".button {background-color: #4CAF50; border: none; color: white; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;}");
+        sb.Append("</style>");
+        sb.Append("</head>");
+        sb.Append("<body>");
+        sb.Append("<h1>Welcome to REZEP</h1>");
+        sb.Append("<p>Please click this button to register:</p>");
+        sb.Append($"<a href='http://localhost:5001/register/{token}' class='button'>Register</a>");
+        sb.Append("</body>");
+        sb.Append("</html>");
+
+        return sb.ToString();
     }
 }
