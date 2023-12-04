@@ -20,20 +20,25 @@ insert into configuser values (7,'test','test','test','$2a$11$TxzkGMQgywQjBxMq9Y
 2. Setup appsettings.json
 ```
 {
-    "Urls": "http://localhost:5260",
+  "Urls": "http://localhost:5260",
   "Logging": {
     "LogLevel": {
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning"
     }
   },
+  "Mail": {
+    "Host": "smtp.gmail.com",
+    "Port": 587,
+    "Address": "<EMAIL ADDRESS>
+    "Password": "<APP SPECIFIC PASSWORT>"
+  },
   "Jwt": {
-    "Key": "<HASH KEY SHA384>",
-    "Issuer": "<ADDRESS (ex. http://localhost:5260)>",
-    "Audience": "<ADDRESS (ex. http://localhost:5260)>",
+    "Key": "<SHA356 KEY>",
+    "Issuer": "http://localhost:PORT",
+    "Audience": "http://localhost:PORT"
   },
   "AllowedHosts": "*",
-  "ConnectionString": "<DB CONNECTION STRING (ex. Host=localhost;Database=rezep-database;Username=postgres;Password=postgres)>"
+  "ConnectionString": "Host=localhost;Database=database;Username=name;Password=password"
 }
-
 ```
