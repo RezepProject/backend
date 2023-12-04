@@ -83,13 +83,20 @@ namespace backend
 
             var app = builder.Build();
 
-            // TODO: fix cors address
+            
             // TODO: change before production
+#if DEBUG
             app.UseCors(b => b
-                .WithOrigins("*")
+                .WithOrigins("http://localhost:7206", "http://localhost:5260", "https://localhost:44398", "http://localhost:5001", "http://localhost:7206/")
                 .AllowAnyHeader()
                 .AllowAnyMethod());
-
+#else
+            app.UseCors(b => b
+                .WithOrigins("http://localhost:44398", "http://localhost:5260")
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod());
+#endif
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

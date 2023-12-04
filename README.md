@@ -20,6 +20,7 @@ insert into configuser values (7,'test','test','test','$2a$11$TxzkGMQgywQjBxMq9Y
 2. Setup appsettings.json
 ```
 {
+    "Urls": "http://localhost:5260",
   "Logging": {
     "LogLevel": {
       "Default": "Information",
