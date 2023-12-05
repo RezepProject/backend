@@ -42,3 +42,9 @@ insert into configuser values (7,'test','test','test','$2a$11$TxzkGMQgywQjBxMq9Y
   "ConnectionString": "Host=localhost;Database=database;Username=name;Password=password"
 }
 ```
+
+3. Run the application
+
+## Known Issues
+
+If you have a problem with migrations, try to drop all tables and (create) run the migrations again.
