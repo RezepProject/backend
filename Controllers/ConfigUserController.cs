@@ -10,16 +10,8 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class ConfigUserController : ControllerBase
+public class ConfigUserController(DataContext ctx) : ControllerBase
 {
-    private readonly DataContext _ctx;
-
-
-    public ConfigUserController(DataContext ctx)
-    {
-        _ctx = ctx;
-    }
-
     [HttpPost]
     public async Task<ActionResult> PostUser(CreateUserToken user)
     {
@@ -36,8 +28,8 @@ public class ConfigUserController : ControllerBase
             Token = Guid.NewGuid()
         };
 
-        _ctx.ConfigUserTokens.Add(userToken);
-        await _ctx.SaveChangesAsync();
+        ctx.ConfigUserTokens.Add(userToken);
+        await ctx.SaveChangesAsync();
 
         return MailUtil.SendMail(userToken.Email, "Test", CreateHtmlMailTemplate(userToken.Token)) ?
             Ok() : StatusCode((int) HttpStatusCode.InternalServerError);
@@ -46,7 +38,7 @@ public class ConfigUserController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ReturnConfigUser>>> GetUsers()
     {
-        return (await _ctx.ConfigUsers.ToListAsync()).Select(user => new ReturnConfigUser()
+        return (await ctx.ConfigUsers.ToListAsync()).Select(user => new ReturnConfigUser()
         {
             Email = user.Email,
             FirstName = user.FirstName,
@@ -73,34 +65,34 @@ public class ConfigUserController : ControllerBase
     [HttpGet("invitation")]
     public async Task<ActionResult<IEnumerable<ConfigUserToken>>> GetInvitations()
     {
-        return await _ctx.ConfigUserTokens.ToListAsync();
+        return await ctx.ConfigUserTokens.ToListAsync();
     }
 
     [HttpGet("invitation/{id}")]
     public async Task<ActionResult<ConfigUserToken>> GetInvitation(int id)
     {
-        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
+        var user = await ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
         return user == null ? NotFound("User not found") : user;
     }
 
     [HttpDelete("invitation/{id}")]
     public async Task<IActionResult> DeleteInvitation(int id)
     {
-        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
+        var user = await ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
         if (user == null)
         {
             return NotFound("User not found");
         }
 
-        _ctx.ConfigUserTokens.Remove(user);
-        await _ctx.SaveChangesAsync();
+        ctx.ConfigUserTokens.Remove(user);
+        await ctx.SaveChangesAsync();
         return NoContent();
     }
 
     [HttpPost("invitation/{id}/resend")]
     public async Task<IActionResult> ResendInvitation(int id)
     {
-        var user = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
+        var user = await ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
         if (user == null)
         {
             return NotFound("User not found");
@@ -108,8 +100,8 @@ public class ConfigUserController : ControllerBase
 
         user.Token = Guid.NewGuid();
         user.CreatedAt = DateTime.Now.ToUniversalTime();
-        _ctx.ConfigUserTokens.Update(user);
-        await _ctx.SaveChangesAsync();
+        ctx.ConfigUserTokens.Update(user);
+        await ctx.SaveChangesAsync();
 
         return MailUtil.SendMail(user.Email, "Test", CreateHtmlMailTemplate(user.Token)) ?
             Ok() : StatusCode((int) HttpStatusCode.InternalServerError);
@@ -124,8 +116,8 @@ public class ConfigUserController : ControllerBase
             return NotFound("User not found");
         }
 
-        _ctx.ConfigUsers.Remove(user);
-        await _ctx.SaveChangesAsync();
+        ctx.ConfigUsers.Remove(user);
+        await ctx.SaveChangesAsync();
         return NoContent();
     }
 
@@ -148,11 +140,11 @@ public class ConfigUserController : ControllerBase
         userToUpdate.LastName = user.LastName;
         userToUpdate.RoleId = user.RoleId;
 
-        _ctx.ConfigUsers.Update(userToUpdate);
+        ctx.ConfigUsers.Update(userToUpdate);
 
         try
         {
-            await _ctx.SaveChangesAsync();
+            await ctx.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -172,11 +164,11 @@ public class ConfigUserController : ControllerBase
         }
 
         user.Password = AuthenticationUtils.HashPassword(newPassword);
-        _ctx.ConfigUsers.Update(user);
+        ctx.ConfigUsers.Update(user);
 
         try
         {
-            await _ctx.SaveChangesAsync();
+            await ctx.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -188,13 +180,13 @@ public class ConfigUserController : ControllerBase
 
     private async Task<ConfigUser?> UserExists(int id)
     {
-        return await _ctx.ConfigUsers.FindAsync(id);
+        return await ctx.ConfigUsers.FindAsync(id);
     }
 
     private async Task<bool> EmailIsUsed(string email)
     {
-        return await _ctx.ConfigUsers.AnyAsync(user => user.Email == email) ||
-               await _ctx.ConfigUserTokens.AnyAsync(user => user.Email == email);
+        return await ctx.ConfigUsers.AnyAsync(user => user.Email == email) ||
+               await ctx.ConfigUserTokens.AnyAsync(user => user.Email == email);
     }
 
     private static string CreateHtmlMailTemplate(Guid token)

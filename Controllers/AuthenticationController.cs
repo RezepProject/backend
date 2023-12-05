@@ -7,15 +7,8 @@ namespace backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthenticationController : ControllerBase
+    public class AuthenticationController(DataContext ctx) : ControllerBase
     {
-        private readonly DataContext _ctx;
-
-        public AuthenticationController(DataContext ctx)
-        {
-            _ctx = ctx;
-        }
-
         [HttpPost(Name = "Authorize")]
         public async Task<ActionResult<string>> Login([FromBody] Login login)
         {
@@ -23,9 +16,9 @@ namespace backend.Controllers
             /* var user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator);
             if (user == null) user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator); */
 
-            var user = await _ctx.ConfigUsers
+            var user = await ctx.ConfigUsers
                            .FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator) ??
-                       await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator);
+                       await ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator);
 
             if (user == null || !AuthenticationUtils.VerifyPassword(login.Password, user.Password))
             {
@@ -38,7 +31,7 @@ namespace backend.Controllers
         [HttpPost("applytoken")]
         public async Task<ActionResult> ApplyToken(CreateConfigUser user)
         {
-            var token = await _ctx.ConfigUserTokens.FirstOrDefaultAsync(token => token.Token == user.Token);
+            var token = await ctx.ConfigUserTokens.FirstOrDefaultAsync(token => token.Token == user.Token);
             if (token == null)
             {
                 return NotFound("Token not found");
@@ -58,9 +51,9 @@ namespace backend.Controllers
                 Password = AuthenticationUtils.HashPassword(user.Password)
             };
 
-            _ctx.ConfigUsers.Add(newUser);
-            _ctx.ConfigUserTokens.Remove(token);
-            await _ctx.SaveChangesAsync();
+            ctx.ConfigUsers.Add(newUser);
+            ctx.ConfigUserTokens.Remove(token);
+            await ctx.SaveChangesAsync();
 
             var locationUri = Url.Link("GetUser", new { controller = "ConfigUser", id = newUser.Id });
             return CreatedAtAction(locationUri, new { id = newUser.Id }, newUser);
