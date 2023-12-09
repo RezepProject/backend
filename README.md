@@ -30,7 +30,7 @@ insert into configuser values (7,'test','test','test','$2a$11$TxzkGMQgywQjBxMq9Y
   "Mail": {
     "Host": "smtp.gmail.com",
     "Port": 587,
-    "Address": "<EMAIL ADDRESS>
+    "Address": "<EMAIL ADDRESS>",
     "Password": "<APP SPECIFIC PASSWORT>"
   },
   "Jwt": {
