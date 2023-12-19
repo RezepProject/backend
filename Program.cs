@@ -1,11 +1,10 @@
 using System.Text;
-using backend.util;
+using backend.Util;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
-// TODO Nelly: change root namespace (and project) name to Backend
 namespace backend;
 
 public static class Program

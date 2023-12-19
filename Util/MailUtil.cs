@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 
-namespace backend.util;
+namespace backend.Util;
 
 public static class MailUtil
 {
