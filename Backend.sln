@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api.csproj", "{97C5292A-0791-48A5-9E71-8E6AC0BF284D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{97C5292A-0791-48A5-9E71-8E6AC0BF284D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LayerSystemController", "LayerSystemController\LayerSystemController.csproj", "{3717A22F-C2C8-4740-9014-8488CBB571B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedResources", "SharedResources\SharedResources.csproj", "{E7662899-E268-4894-81E2-F4B610DE2633}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{3717A22F-C2C8-4740-9014-8488CBB571B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3717A22F-C2C8-4740-9014-8488CBB571B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3717A22F-C2C8-4740-9014-8488CBB571B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7662899-E268-4894-81E2-F4B610DE2633}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7662899-E268-4894-81E2-F4B610DE2633}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7662899-E268-4894-81E2-F4B610DE2633}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7662899-E268-4894-81E2-F4B610DE2633}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -30,4 +30,9 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LayerSystemController\LayerSystemController.csproj" />
+    <ProjectReference Include="..\SharedResources\SharedResources.csproj" />
+  </ItemGroup>
+
 </Project>
