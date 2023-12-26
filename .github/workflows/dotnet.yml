@@ -8,6 +8,11 @@ on:
     branches:
       - main
 
+      
+defaults:
+ run:
+  working-directory: ./backend
+
 jobs:
   build:
 
@@ -32,4 +37,4 @@ jobs:
       run: dotnet build backend.sln --no-restore
 
     - name: Test
-      run: dotnet test Tests\Tests.csproj --no-build --verbosity normal
+      run: dotnet test Tests/Tests.csproj --no-build --verbosity normal
