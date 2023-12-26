@@ -26,16 +26,10 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore backend.sln
+      run: dotnet restore backend/backend.sln
 
     - name: Build Solution
-      run: dotnet build backend.sln --no-restore
-
-    - name: Find Test Project
-      run: |
-        TESTS_PROJECT=$(find . -name "Tests.csproj" -print -quit)
-        echo "Found Test Project: $TESTS_PROJECT"
-        echo "##[set-output name=TESTS_PROJECT;]$TESTS_PROJECT"
+      run: dotnet build backend/backend.sln --no-restore
 
     - name: Test
-      run: dotnet test ${{ env.TESTS_PROJECT }} --no-build --verbosity normal
+      run: dotnet test backend/backend/Tests/Tests.csproj --no-build --verbosity normal
