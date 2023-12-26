@@ -3,10 +3,10 @@ name: .NET
 on:
   push:
     branches:
-      - main
+      - setup-seperate-test-project
   pull_request:
     branches:
-      - main
+      - setup-seperate-test-project
 
 jobs:
   build:
