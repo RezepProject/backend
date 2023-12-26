@@ -10,26 +10,25 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Print Repository Contents
-      run: ls -R
+      - name: Print Repository Contents
+        run: ls -R
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore backend.sln
+      - name: Restore dependencies
+        run: dotnet restore backend.sln
 
-    - name: Build Solution
-      run: dotnet build backend.sln --no-restore
+      - name: Build Solution
+        run: dotnet build backend.sln --no-restore
 
-    - name: Test
-      run: dotnet test Tests/Tests.csproj --no-build --verbosity normal
+      - name: Test
+        run: dotnet test --no-build --verbosity normal Test
