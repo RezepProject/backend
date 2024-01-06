@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend;
@@ -12,11 +11,9 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20231207082855_ChangeConfigToken")]
-    partial class ChangeConfigToken
+    partial class DataContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,7 +22,7 @@ namespace backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseSerialColumns(modelBuilder);
 
-            modelBuilder.Entity("backend.Entities.Answer", b =>
+            modelBuilder.Entity("Api.Entities.Answer", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -57,7 +54,7 @@ namespace backend.Migrations
                     b.ToTable("answer", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Entities.Config", b =>
+            modelBuilder.Entity("Api.Entities.Config", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -82,7 +79,7 @@ namespace backend.Migrations
                     b.ToTable("config", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Entities.ConfigUser", b =>
+            modelBuilder.Entity("Api.Entities.ConfigUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -124,7 +121,7 @@ namespace backend.Migrations
                     b.ToTable("configuser", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Entities.ConfigUserToken", b =>
+            modelBuilder.Entity("Api.Entities.ConfigUserToken", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -159,7 +156,7 @@ namespace backend.Migrations
                     b.ToTable("configusertoken", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Entities.Question", b =>
+            modelBuilder.Entity("Api.Entities.Question", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -179,7 +176,7 @@ namespace backend.Migrations
                     b.ToTable("question", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Entities.Role", b =>
+            modelBuilder.Entity("Api.Entities.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -199,9 +196,9 @@ namespace backend.Migrations
                     b.ToTable("role", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Entities.Answer", b =>
+            modelBuilder.Entity("Api.Entities.Answer", b =>
                 {
-                    b.HasOne("backend.Entities.Question", "Question")
+                    b.HasOne("Api.Entities.Question", "Question")
                         .WithMany("Answers")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -211,9 +208,9 @@ namespace backend.Migrations
                     b.Navigation("Question");
                 });
 
-            modelBuilder.Entity("backend.Entities.ConfigUser", b =>
+            modelBuilder.Entity("Api.Entities.ConfigUser", b =>
                 {
-                    b.HasOne("backend.Entities.Role", "Role")
+                    b.HasOne("Api.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -223,9 +220,9 @@ namespace backend.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("backend.Entities.ConfigUserToken", b =>
+            modelBuilder.Entity("Api.Entities.ConfigUserToken", b =>
                 {
-                    b.HasOne("backend.Entities.Role", "Role")
+                    b.HasOne("Api.Entities.Role", "Role")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -235,12 +232,12 @@ namespace backend.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("backend.Entities.Question", b =>
+            modelBuilder.Entity("Api.Entities.Question", b =>
                 {
                     b.Navigation("Answers");
                 });
 
-            modelBuilder.Entity("backend.Entities.Role", b =>
+            modelBuilder.Entity("Api.Entities.Role", b =>
                 {
                     b.Navigation("Users");
                 });
