@@ -6,10 +6,10 @@ public class RequestRepository
 {
     private static RequestRepository? _instance;
 
-    public static RequestRepository Instance
+    public static RequestRepository GetInstance()
     {
-        get { return _instance ??= new RequestRepository(); }
+        return _instance ??= new RequestRepository();
     }
 
-    public IList<Request> Requests { get; set; }
+    public IList<Request> Requests { get; set; } = new List<Request>();
 }

@@ -48,3 +48,5 @@ insert into configuser values (7,'test','test','test','$2a$11$TxzkGMQgywQjBxMq9Y
 ## Known Issues
 
 If you have a problem with migrations, try to drop all tables and (create) run the migrations again.
+
+If the error "Unhandled exception. System.ArgumentException: Host can't be null" is shown on startup, the appsettings.json is most likely missing.

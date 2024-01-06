@@ -6,10 +6,10 @@ public class ResponseRepository
 {
     private static ResponseRepository? _instance;
 
-    public static ResponseRepository Instance
+    public static ResponseRepository GetInstance()
     {
-        get { return _instance ??= new ResponseRepository(); }
+        return _instance ??= new ResponseRepository();
     }
 
-    public IList<Response> Responses { get; set; }
+    public IList<Response> Responses { get; set; } = new List<Response>();
 }
