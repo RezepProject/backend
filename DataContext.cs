@@ -96,6 +96,8 @@ public class DataContext : DbContext
         question
             .Property(q => q.Text)
             .IsRequired();
+        question
+            .HasMany(q => q.Answers);
     }
 
     private static void CreateAnswer(ModelBuilder modelBuilder)

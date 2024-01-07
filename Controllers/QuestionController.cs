@@ -12,7 +12,9 @@ public class QuestionController(DataContext ctx) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Question>>> GetQuestions()
     {
-        return await ctx.Questions.ToListAsync();
+        return await ctx.Questions
+            .Include(q => q.Answers)
+            .ToListAsync();
     }
 
     [HttpGet("{id:int}")]
