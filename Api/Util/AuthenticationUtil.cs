@@ -5,7 +5,7 @@ using backend.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace backend.util;
+namespace backend.Util;
 
 public static class AuthenticationUtils
 {
