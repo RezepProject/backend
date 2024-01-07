@@ -12,6 +12,7 @@ namespace LayerSystemController
             {
                 Text = "MySuperAwesomeRequest"
             });
+
             Console.WriteLine("Layer System Controller started.");
             while (true)
             {

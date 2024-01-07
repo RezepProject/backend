@@ -18,6 +18,8 @@ public static class RequestHandler
 
     public static void AddRequest(Request req)
     {
+        Console.WriteLine("test");
         RequestRepository.GetInstance().Requests.Add(req);
+        HandleRequest(req);
     }
 }
