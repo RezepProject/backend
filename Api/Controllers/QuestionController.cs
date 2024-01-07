@@ -12,7 +12,9 @@ public class QuestionController(DataContext ctx) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Question>>> GetQuestions()
     {
-        return await ctx.Questions.ToListAsync();
+        return await ctx.Questions
+            .Include(q => q.Answers)
+            .ToListAsync();
     }
 
     [HttpGet("{id:int}")]
@@ -29,12 +31,22 @@ public class QuestionController(DataContext ctx) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Question>> AddQuestion(Question question)
+    public async Task<ActionResult<Question>> AddQuestion(CreateQuestion question)
     {
-        ctx.Questions.Add(question);
+        var questionEntity = new Question()
+        {
+            Text = question.Text,
+            Answers = question.Answers?.Select(answer => new Answer()
+            {
+                Text = answer.Text,
+                User = answer.User
+            }).ToList()
+        };
+        
+        ctx.Questions.Add(questionEntity);
         await ctx.SaveChangesAsync();
 
-        return CreatedAtAction("GetQuestion", new { id = question.Id }, question);
+        return CreatedAtAction("GetQuestion", new { id = questionEntity.Id }, question);
     }
 
     [HttpPut("{id:int}")]

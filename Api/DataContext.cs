@@ -96,6 +96,8 @@ public class DataContext : DbContext
         question
             .Property(q => q.Text)
             .IsRequired();
+        question
+            .HasMany(q => q.Answers);
     }
 
     private static void CreateAnswer(ModelBuilder modelBuilder)
@@ -107,13 +109,6 @@ public class DataContext : DbContext
         answer
             .Property(a => a.Text)
             .IsRequired();
-        answer
-            .Property(a => a.QuestionId)
-            .IsRequired();
-        answer
-            .HasOne(a => a.Question)
-            .WithMany(q => q.Answers)
-            .HasForeignKey(a => a.QuestionId);
     }
 
     private static void CreateConfigUserToken(ModelBuilder modelBuilder)

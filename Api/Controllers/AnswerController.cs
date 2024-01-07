@@ -36,11 +36,7 @@ public class AnswerController(DataContext ctx) : ControllerBase
         {
             return NotFound("Answer id not found!");
         }
-
-        if (answer.QuestionId != null)
-        {
-            answerToUpdate.QuestionId = (int)answer.QuestionId;
-        }
+        
         answerToUpdate.Text = answer.Text;
 
         ctx.Entry(answerToUpdate).State = EntityState.Modified;
