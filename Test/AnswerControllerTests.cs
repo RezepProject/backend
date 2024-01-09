@@ -7,6 +7,11 @@ public class AnswerControllerTest
     {
         Assert.True(true);
     }
+    
+    public void SimpleNegativeTest()
+    {
+        Assert.True(false);
+    }
 }
 
 
