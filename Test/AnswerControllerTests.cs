@@ -8,6 +8,7 @@ public class AnswerControllerTest
         Assert.True(true);
     }
     
+    [Fact]
     public void SimpleNegativeTest()
     {
         Assert.True(false);
