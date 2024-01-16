@@ -13,6 +13,12 @@ public class AnswerControllerTest
     {
         Assert.True(false);
     }
+
+    [Fact]
+    public void SimplePosTest()
+    {
+        Assert.True(true);
+    }
 }
 
 
