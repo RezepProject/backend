@@ -34,7 +34,7 @@ insert into configuser values (7,'test','test','test','$2a$11$TxzkGMQgywQjBxMq9Y
     "Password": "<APP SPECIFIC PASSWORT>"
   },
   "Jwt": {
-    "Key": "<SHA356 KEY>",
+    "Key": "<SHA356-KEY>",
     "Issuer": "http://localhost:PORT",
     "Audience": "http://localhost:PORT"
   },
