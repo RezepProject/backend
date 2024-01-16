@@ -7,18 +7,6 @@ public class AnswerControllerTest
     {
         Assert.True(true);
     }
-    
-    [Fact]
-    public void SimpleNegativeTest()
-    {
-        Assert.True(false);
-    }
-
-    [Fact]
-    public void SimplePosTest()
-    {
-        Assert.True(true);
-    }
 }
 
 
