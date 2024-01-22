@@ -1,7 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using backend.Entities;
 using backend.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace backend.Controllers;
 
@@ -17,13 +21,16 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
         if (user == null) user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator); */
 
         var user = await ctx.ConfigUsers
-                            .FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator) ??
+                       .FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator) ??
                    await ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator);
 
         if (user == null || !AuthenticationUtils.VerifyPassword(login.Password, user.Password))
         {
             return Unauthorized();
         }
+        
+        var refreshToken = GenerateRefreshToken();
+        SetRefreshToken(refreshToken, user);
 
         return Ok(AuthenticationUtils.GenerateJwtToken(login, user.Id, user.RoleId));
     }
@@ -37,7 +44,7 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
             return NotFound("Token not found");
         }
 
-        if(token.CreatedAt.ToUniversalTime().AddDays(1) < DateTime.Now.ToUniversalTime())
+        if (token.CreatedAt.ToUniversalTime().AddDays(1) < DateTime.Now.ToUniversalTime())
         {
             return BadRequest("Token expired");
         }
@@ -57,5 +64,69 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
 
         var locationUri = Url.Link("GetUser", new { controller = "ConfigUser", id = newUser.Id });
         return CreatedAtAction(locationUri, new { id = newUser.Id }, newUser);
+    }
+
+    [HttpPost("refresh-token")]
+    public async Task<ActionResult<string>> RefreshToken(int userId)
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+        var user = await ctx.ConfigUsers.FindAsync(userId);
+
+        if (user == null)
+        {
+            return BadRequest("User not found.");
+        }
+        
+        
+        if (!user.RefreshToken.Equals(refreshToken))
+        {
+            return Unauthorized("Invalid Refresh Token.");
+        }
+
+        if (user.TokenExpires < DateTime.Now)
+        {
+            return Unauthorized("Token expired.");
+        }
+
+        Login login = new Login()
+        {
+            Password = user.Password,
+            UserIdentificator = user.Email
+        };
+
+        string token = AuthenticationUtils.GenerateJwtToken(login, user.Id, user.RoleId);
+        var newRefreshToken = GenerateRefreshToken();
+        await SetRefreshToken(newRefreshToken, user);
+
+        return Ok(token);
+    }
+
+    private RefreshToken GenerateRefreshToken()
+    {
+        var refreshToken = new RefreshToken
+        {
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            Expires = DateTime.Now.AddDays(7),
+            Created = DateTime.Now
+        };
+
+        return refreshToken;
+    }
+
+    private async Task SetRefreshToken(RefreshToken newRefreshToken, ConfigUser user)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Expires = newRefreshToken.Expires
+        };
+        Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
+
+        user.RefreshToken = newRefreshToken.Token;
+        user.TokenCreated = newRefreshToken.Created;
+        user.TokenExpires = newRefreshToken.Expires;
+        ctx.RefreshTokens.Add(newRefreshToken);
+        ctx.ConfigUsers.Update(user);
+        await ctx.SaveChangesAsync();
     }
 }

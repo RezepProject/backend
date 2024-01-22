@@ -11,6 +11,7 @@ public class DataContext : DbContext
     public DbSet<Question> Questions { get; set; }
     public DbSet<Answer> Answers { get; set; }
     public DbSet<ConfigUserToken> ConfigUserTokens { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public DataContext()
     {
@@ -36,6 +37,7 @@ public class DataContext : DbContext
         CreateQuestion(modelBuilder);
         CreateAnswer(modelBuilder);
         CreateConfigUserToken(modelBuilder);
+        CreateRefreshToken(modelBuilder);
     }
 
     private static void CreateConfigUser(ModelBuilder modelBuilder)
@@ -134,5 +136,13 @@ public class DataContext : DbContext
             .IsRequired();
         configUserToken
             .HasOne(cut => cut.Role);
+    }
+    
+    private static void CreateRefreshToken(ModelBuilder modelBuilder)
+    {
+        var refreshToken = modelBuilder.Entity<RefreshToken>();
+        refreshToken
+            .Property(rt => rt.Id)
+            .UseIdentityColumn();
     }
 }

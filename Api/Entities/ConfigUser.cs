@@ -2,6 +2,8 @@ namespace backend.Entities;
 
 public class ConfigUser
 {
+    private DateTime _tokenCreated;
+    private DateTime _tokenExpires;
     public int Id { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
@@ -9,6 +11,19 @@ public class ConfigUser
     public string Password { get; set; }
     public int RoleId { get; set; }
     public Role? Role { get; set; }
+    public string RefreshToken { get; set; } = string.Empty;
+
+    public DateTime TokenCreated
+    {
+        get => _tokenCreated;
+        set => _tokenCreated = value.ToUniversalTime();
+    }
+
+    public DateTime TokenExpires
+    {
+        get { return _tokenExpires; }
+        set { _tokenExpires = value.ToUniversalTime(); }
+    }
 }
 
 public class CreateConfigUser
