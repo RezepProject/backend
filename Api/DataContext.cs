@@ -9,7 +9,7 @@ public class DataContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<Config> Configs { get; set; }
     public DbSet<Question> Questions { get; set; }
-    public DbSet<Answer> Answers { get; set; }
+    public virtual DbSet<Answer> Answers { get; set; }
     public DbSet<ConfigUserToken> ConfigUserTokens { get; set; }
 
     public DataContext()
