@@ -1,4 +1,11 @@
-﻿namespace Test;
+﻿using backend;
+using backend.Controllers;
+using backend.Entities;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using NSubstitute;
+
+namespace Test;
 
 public class AnswerControllerTest
 {
