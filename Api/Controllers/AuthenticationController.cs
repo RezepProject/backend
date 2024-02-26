@@ -88,7 +88,7 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
             return Unauthorized("Token expired.");
         }
 
-        Login login = new Login()
+        Login login = new Login() 
         {
             Password = user.Password,
             UserIdentificator = user.Email
