@@ -111,6 +111,8 @@ public static class Program
 
         app.MapControllers();
 
+        AiUtil.GetInstance();
+
         await app.RunAsync();
     }
 }

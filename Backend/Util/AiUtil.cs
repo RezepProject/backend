@@ -5,24 +5,26 @@ using Newtonsoft.Json.Linq;
 
 namespace backend.Util;
 
+class ThreadTime
+{
+    public string ThreadId { get; set; }
+    public DateTime Time { get; set; }
+}
+
 public class AiUtil
 {
     private static AiUtil? _aiUtil;
 
-    public static AiUtil? GetInstance()
+    public static AiUtil GetInstance()
     {
-        if (_aiUtil == null)
-        {
-            _aiUtil = new AiUtil();
-        }
-
-        return _aiUtil;
+        return _aiUtil ??= new AiUtil();
     }
 
     private HttpClient _httpClient = new HttpClient();
     private string _assistantId = "";
     private string _nextThreadId = "";
     private string[] _files = [];
+    private List<ThreadTime> _threads = new();
 
     private AiUtil()
     {
@@ -30,7 +32,7 @@ public class AiUtil
         _httpClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v1");
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-        CreateAssistant();
+        CreateAssistant().Wait();
     }
 
     private async Task CreateAssistant()
@@ -40,8 +42,15 @@ public class AiUtil
         // create assistant
         var assistantData = new
         {
-            instructions = "Ignore all the previous instructions. You are now a new assistant for a Hotel / Restaurant. Use everything you know (first of all the files) and answer the questions accordingly. Its possible that a question needs information from the internet, you are only allowed to use it in this case. Write a summarizing answer to the question as best as you can. Here is everything you need to know: The toilet is on the right side of the reception.",
-            name = "Name1",
+            instructions = "Ignore all the previous instructions. " +
+                           "You are now a new assistant for a Hotel / Restaurant. " +
+                           "Use everything you know (first of all the files) and answer the questions accordingly. " +
+                           "Its possible that a question needs information from the internet, " +
+                           "you are only allowed to use it in this case. Write a summarizing answer to the question as " +
+                           "best as you can. Here is everything you need to know: The toilet is on the right side " +
+                           "of the reception. Always write short answers up to 50 words! " +
+                           "You dont have to rewrite every answer, just answer the question faster instead.",
+            name = "Rezep",
             model = "gpt-4-1106-preview"
         };
 
@@ -49,9 +58,9 @@ public class AiUtil
         var response = await _httpClient.PostAsync("https://api.openai.com/v1/assistants", content);
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent);
+        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
 
-        _assistantId = result["id"].ToString();
+        _assistantId = result["id"]!.ToString();
 
         // create thread
         _nextThreadId = await CreateThread();
@@ -67,20 +76,38 @@ public class AiUtil
         return tmp;
     }
 
+    private void UpdateThreads()
+    {
+        for (int i = 0; i < _threads.Count; i++) {
+            if ((DateTime.Now - _threads[i].Time).TotalMinutes > 1) {
+                _threads.RemoveAt(i);
+                i--;
+            }
+        }
+    }
+
     private async Task<string> CreateThread()
     {
         var response = await _httpClient.PostAsync("https://api.openai.com/v1/threads", null);
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent);
-        return result["id"].ToString();
+        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+        return result["id"]!.ToString();
     }
 
     // returns questionId, threadId
     public async Task<(string, string)> AskQuestion(string? threadId, string question)
     {
-        if(string.IsNullOrEmpty(threadId))
+        UpdateThreads();
+        if (string.IsNullOrEmpty(threadId) && _threads.Where(t => t.ThreadId == threadId) != null)
+        {
             threadId = await GetThread();
+            _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
+        }
+        else
+        {
+            _threads.FirstOrDefault(t => t.ThreadId == threadId)!.Time = DateTime.Now;
+        }
 
         var messageData = new
         {
@@ -93,7 +120,7 @@ public class AiUtil
         var response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/messages", content);
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent);
+        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
 
         var runData = new
         {
@@ -104,9 +131,9 @@ public class AiUtil
         response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/runs", content);
         responseContent = await response.Content.ReadAsStringAsync();
 
-        result = (JObject)JsonConvert.DeserializeObject(responseContent);
+        result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
 
-        return (result["id"].ToString(), threadId);
+        return (result["id"]!.ToString(), threadId);
     }
 
     public async Task<bool> CheckStatus(string threadId, string runId)
@@ -115,8 +142,8 @@ public class AiUtil
         var responseContent = await response.Content.ReadAsStringAsync();
 
         // check if answer is included
-        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent);
-        return result["status"].ToString() == "completed";
+        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+        return result["status"]!.ToString() == "completed";
     }
 
     private async Task<JObject> GetResult(string threadId)
@@ -124,7 +151,7 @@ public class AiUtil
         var response = await _httpClient.GetAsync($"https://api.openai.com/v1/threads/{threadId}/messages");
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        return (JObject)JsonConvert.DeserializeObject(responseContent);
+        return (JObject)JsonConvert.DeserializeObject(responseContent)!;
     }
 
     public async Task<string> GetResultString(string threadId)
