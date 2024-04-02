@@ -105,7 +105,7 @@ public class AiUtil
     public async Task<(string, string)> AskQuestion(string? threadId, string question)
     {
         await UpdateThreads();
-        if (string.IsNullOrEmpty(threadId) && _threads.Where(t => t.ThreadId == threadId) != null)
+        if (string.IsNullOrEmpty(threadId) || _threads.Where(t => t.ThreadId == threadId) != null)
         {
             threadId = await GetThread();
             _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
