@@ -76,14 +76,20 @@ public class AiUtil
         return tmp;
     }
 
-    private void UpdateThreads()
+    private async Task UpdateThreads()
     {
         for (int i = 0; i < _threads.Count; i++) {
             if ((DateTime.Now - _threads[i].Time).TotalMinutes > 1) {
+                await DeleteThread(_threads[i].ThreadId);
                 _threads.RemoveAt(i);
                 i--;
             }
         }
+    }
+
+    private async Task DeleteThread(string threadId)
+    {
+        await _httpClient.DeleteAsync($"https://api.openai.com/v1/threads/{threadId}");
     }
 
     private async Task<string> CreateThread()
@@ -98,7 +104,7 @@ public class AiUtil
     // returns questionId, threadId
     public async Task<(string, string)> AskQuestion(string? threadId, string question)
     {
-        UpdateThreads();
+        await UpdateThreads();
         if (string.IsNullOrEmpty(threadId) && _threads.Where(t => t.ThreadId == threadId) != null)
         {
             threadId = await GetThread();
