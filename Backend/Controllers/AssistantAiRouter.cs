@@ -18,12 +18,14 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
     {
         public string Answer { get; set; }
         public string SessionId { get; set; }
+        public string TimeNeeded { get; set; }
     }
 
     [HttpPost]
     public async Task<ActionResult<UserResponse>> GetAiResponse([FromBody] UserRequest userRequest)
     {
-        string? question = userRequest.Question;
+        DateTime start = DateTime.Now;
+        string question = userRequest.Question;
         string? sessionId = userRequest.SessionId;
 
         var aiUtil = AiUtil.GetInstance();
@@ -31,16 +33,23 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         var (runId, threadId) = await aiUtil.AskQuestion(sessionId, question);
 
         bool isCompleted = false;
+        bool firstRun = true;
         while (!isCompleted)
         {
+            if (!firstRun)
+            {
+                await Task.Delay(500);
+            }
+
+            firstRun = false;
             isCompleted = await aiUtil.CheckStatus(threadId, runId);
-            await Task.Delay(1000);
         }
 
         UserResponse userResponse = new UserResponse()
         {
             Answer = await aiUtil.GetResultString(threadId),
-            SessionId = threadId
+            SessionId = threadId,
+            TimeNeeded = (DateTime.Now - start).TotalSeconds.ToString()
         };
 
         return Ok(userResponse);
