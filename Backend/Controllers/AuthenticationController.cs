@@ -21,16 +21,18 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
         if (user == null) user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator); */
 
         var user = await ctx.ConfigUsers
-                       .FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator) ??
-                   await ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator);
+            .FirstOrDefaultAsync(u => u.Email == login.UserIdentificator) 
+                   ?? await ctx.ConfigUsers
+            .FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator);
 
         if (user == null || !AuthenticationUtils.VerifyPassword(login.Password, user.Password))
         {
+            Console.WriteLine(login.UserIdentificator);
             return Unauthorized();
         }
         
         var refreshToken = GenerateRefreshToken();
-        SetRefreshToken(refreshToken, user);
+        await SetRefreshToken(refreshToken, user);
 
         return Ok(AuthenticationUtils.GenerateJwtToken(login, user.Id, user.RoleId));
     }
