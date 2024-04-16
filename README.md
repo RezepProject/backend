@@ -12,7 +12,7 @@
 ```sql
 insert into role values (1, 'ADMIN');
 insert into configuser (first_name, last_name, email, password, role_id, refresh_token, token_created, token_expires)
-values ('test', 'test', 'test@test.com', '$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2', 1, 'refresh_token_value', current_timestamp, current_timestamp + interval '7 days');
+values ('test', 'test', 'test', '$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2', 1, 'refresh_token_value', current_timestamp, current_timestamp + interval '7 days');
 ```
 
 ## Setup Backend
