@@ -17,7 +17,7 @@ public class StreamingController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<HttpResponseMessage> SendFrame([FromBody] FrameObject frame)
+    public async Task<ActionResult<string>> SendFrame([FromBody] FrameObject frame)
     {
         // Decode the frame data from base64
         byte[] frameBytes = Convert.FromBase64String(frame.Data.Split(",")[1]);
@@ -26,19 +26,14 @@ public class StreamingController : ControllerBase
         using (var image = new Mat())
         {
             CvInvoke.Imdecode(frameBytes, ImreadModes.Color, image);
-            if (image.IsEmpty)
-            {
-                return new HttpResponseMessage(HttpStatusCode.BadRequest);
-            }
+
+            if (image.IsEmpty) return BadRequest();
 
             var faceDetector =
-                new CascadeClassifier(@".\Resources\haarcascade_frontalface_default.xml"); // Replace with your face detection model path
+                new CascadeClassifier(@".\Resources\haarcascade_frontalface_default.xml");
             Rectangle[] faces = faceDetector.DetectMultiScale(image, 1.1, 3, Size.Empty, Size.Empty);
 
-            // Logic to handle detected faces (e.g., send response)
-            // ...
-
-            return new HttpResponseMessage(HttpStatusCode.OK);
+            return Ok(faces);
         }
     }
 }
