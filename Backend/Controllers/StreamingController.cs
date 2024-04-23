@@ -11,11 +11,16 @@ namespace backend.Controllers;
 [Route("[controller]")]
 public class StreamingController : ControllerBase
 {
+    public class FrameObject
+    {
+        public string Data { get; set; }
+    }
+
     [HttpPost]
-    public async Task<HttpResponseMessage> SendFrame(string frameData)
+    public async Task<HttpResponseMessage> SendFrame([FromBody] FrameObject frame)
     {
         // Decode the frame data from base64
-        byte[] frameBytes = Convert.FromBase64String(frameData.Split(",")[1]);
+        byte[] frameBytes = Convert.FromBase64String(frame.Data.Split(",")[1]);
 
         // Process the frame using Emgu CV
         using (var image = new Mat())
