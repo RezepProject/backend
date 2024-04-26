@@ -12,6 +12,7 @@ public class DataContext : DbContext
     public DbSet<Answer> Answers { get; set; }
     public DbSet<ConfigUserToken> ConfigUserTokens { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Setting> Settings { get; set; }
 
     public DataContext()
     {
@@ -38,6 +39,7 @@ public class DataContext : DbContext
         CreateAnswer(modelBuilder);
         CreateConfigUserToken(modelBuilder);
         CreateRefreshToken(modelBuilder);
+        CreateSetting(modelBuilder);
     }
 
     private static void CreateConfigUser(ModelBuilder modelBuilder)
@@ -144,5 +146,31 @@ public class DataContext : DbContext
         refreshToken
             .Property(rt => rt.Id)
             .UseIdentityColumn();
+    }
+
+    private static void CreateSetting(ModelBuilder modelBuilder)
+    {
+        var setting = modelBuilder.Entity<Setting>();
+        setting
+            .Property(s => s.Id)
+            .UseIdentityColumn();
+        setting
+            .Property(s => s.Name)
+            .IsRequired();
+        setting
+            .Property(s => s.BackgroundImage)
+            .IsRequired();
+        setting
+            .Property(s => s.Language)
+            .IsRequired();
+        setting
+            .Property(s => s.TalkingSpeed)
+            .IsRequired();
+        setting
+            .Property(s => s.GreetingMessage)
+            .IsRequired();
+        setting
+            .Property(s => s.State)
+            .IsRequired();
     }
 }
