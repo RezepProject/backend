@@ -20,7 +20,7 @@ public class StreamingController : ControllerBase
     public ActionResult<string> SendFrame([FromBody] FrameObject frame)
     {
         // Decode the frame data from base64
-        var frameBytes = Convert.FromBase64String(frame.Data.Split(",")[1]);
+        var frameBytes = Convert.FromBase64String(frame.Data);
 
         // Process the frame using Emgu CV
         using (var image = new Mat())
