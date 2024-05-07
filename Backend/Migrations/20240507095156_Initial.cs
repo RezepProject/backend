@@ -68,6 +68,26 @@ namespace backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "setting",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    config_user_id = table.Column<int>(type: "integer", nullable: false),
+                    config_user = table.Column<int>(type: "integer", nullable: false),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    background_image = table.Column<string>(type: "text", nullable: false),
+                    language = table.Column<string>(type: "text", nullable: false),
+                    talking_speed = table.Column<double>(type: "double precision", nullable: false),
+                    greeting_message = table.Column<string>(type: "text", nullable: false),
+                    state = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_setting", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "answer",
                 columns: table => new
                 {
@@ -168,6 +188,9 @@ namespace backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "refreshtoken");
+
+            migrationBuilder.DropTable(
+                name: "setting");
 
             migrationBuilder.DropTable(
                 name: "question");

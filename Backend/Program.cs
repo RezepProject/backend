@@ -77,6 +77,8 @@ public static class Program
             });
         });
 
+        builder.Services.AddSignalR();
+
         var app = builder.Build();
 
         using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
