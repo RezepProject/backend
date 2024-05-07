@@ -1,4 +1,5 @@
 using System.Text;
+using backend.Hubs;
 using backend.Util;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -110,6 +111,7 @@ public static class Program
         // app.UseAuthorization();
 
         app.MapControllers();
+        app.MapHub<ConnectionStateHub>("/hubs/connection");
 
         AiUtil.GetInstance();
 
