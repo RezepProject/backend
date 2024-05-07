@@ -27,7 +27,7 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
 
         if (user == null || !AuthenticationUtils.VerifyPassword(login.Password, user.Password))
         {
-            Console.WriteLine(login.UserIdentificator);
+            await Task.Delay(3000);
             return Unauthorized();
         }
         

@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend;
@@ -12,11 +11,9 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240423050900_Initial")]
-    partial class Initial
+    partial class DataContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -238,6 +235,57 @@ namespace backend.Migrations
                         .HasName("pk_role");
 
                     b.ToTable("role", (string)null);
+                });
+
+            modelBuilder.Entity("backend.Entities.Setting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BackgroundImage")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("background_image");
+
+                    b.Property<int>("ConfigUser")
+                        .HasColumnType("integer")
+                        .HasColumnName("config_user");
+
+                    b.Property<int>("ConfigUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("config_user_id");
+
+                    b.Property<string>("GreetingMessage")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("greeting_message");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("language");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<bool>("State")
+                        .HasColumnType("boolean")
+                        .HasColumnName("state");
+
+                    b.Property<double>("TalkingSpeed")
+                        .HasColumnType("double precision")
+                        .HasColumnName("talking_speed");
+
+                    b.HasKey("Id")
+                        .HasName("pk_setting");
+
+                    b.ToTable("setting", (string)null);
                 });
 
             modelBuilder.Entity("backend.Entities.Answer", b =>
