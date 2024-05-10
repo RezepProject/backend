@@ -42,7 +42,7 @@ public class QuestionController(DataContext ctx) : ControllerBase
                 User = answer.User
             }).ToList()
         };
-        
+
         ctx.Questions.Add(questionEntity);
         await ctx.SaveChangesAsync();
 
@@ -65,7 +65,7 @@ public class QuestionController(DataContext ctx) : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            return QuestionExists(id) ? StatusCode((int) HttpStatusCode.InternalServerError) : NotFound();
+            return QuestionExists(id) ? StatusCode((int)HttpStatusCode.InternalServerError) : NotFound();
         }
 
         return NoContent();
@@ -74,10 +74,17 @@ public class QuestionController(DataContext ctx) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteQuestion(int id)
     {
-        var question = await ctx.Questions.FindAsync(id);
+        var question = await ctx.Questions
+            .Include(q => q.Answers)
+            .FirstOrDefaultAsync(q => q.Id == id);
         if (question == null)
         {
             return NotFound("Question id not found!");
+        }
+
+        if (question.Answers != null)
+        {
+               ctx.Answers.RemoveRange(question.Answers);
         }
 
         ctx.Questions.Remove(question);
