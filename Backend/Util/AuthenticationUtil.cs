@@ -20,10 +20,14 @@ public static class AuthenticationUtils
             new Claim(ClaimTypes.Role, roleId.ToString()),
             new Claim(ClaimTypes.Sid, userId.ToString()),
         };
+
+        var timeout = 15;
+        if(Program.devMode) timeout = 4 * 60;
+
         var token = new JwtSecurityToken(Program.config["Jwt:Issuer"],
             Program.config["Jwt:Audience"],
             claims,
-            expires: DateTime.UtcNow.AddMinutes(15),
+            expires: DateTime.UtcNow.AddMinutes(timeout),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

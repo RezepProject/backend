@@ -10,6 +10,7 @@ namespace backend;
 public static class Program
 {
     public static IConfiguration config;
+    public static bool devMode = false;
 
     public static async Task Main(string[] args)
     {
@@ -94,6 +95,7 @@ public static class Program
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
+            devMode = true;
             app.UseSwagger();
             app.UseSwaggerUI();
         }
