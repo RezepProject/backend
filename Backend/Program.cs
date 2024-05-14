@@ -31,7 +31,7 @@ public static class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name         = "Authorization",
                 Type         = SecuritySchemeType.ApiKey,
@@ -88,10 +88,10 @@ public static class Program
 
         // TODO: change before production
         app.UseCors(b => b
-            .WithOrigins("http://localhost:44398", "http://localhost:5260")
-            .AllowAnyOrigin()
+            .WithOrigins("http://localhost:44398", "http://localhost:5260", "http://localhost:8080")
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials());
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
