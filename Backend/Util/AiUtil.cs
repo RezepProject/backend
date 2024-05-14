@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace backend.Util;
 
-class ThreadTime
+internal class ThreadTime
 {
     public string ThreadId { get; set; }
     public DateTime Time { get; set; }
@@ -14,25 +14,26 @@ class ThreadTime
 public class AiUtil
 {
     private static AiUtil? _aiUtil;
-
-    public static AiUtil GetInstance()
-    {
-        return _aiUtil ??= new AiUtil();
-    }
-
-    private HttpClient _httpClient = new HttpClient();
     private string _assistantId = "";
-    private string _nextThreadId = "";
     private string[] _files = [];
-    private List<ThreadTime> _threads = new();
+
+    private readonly HttpClient _httpClient = new();
+    private string _nextThreadId = "";
+    private readonly List<ThreadTime> _threads = new();
 
     private AiUtil()
     {
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Program.config["OpenAiKey"] ?? string.Empty);
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", Program.config["OpenAiKey"] ?? string.Empty);
         _httpClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v1");
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         CreateAssistant().Wait();
+    }
+
+    public static AiUtil GetInstance()
+    {
+        return _aiUtil ??= new AiUtil();
     }
 
     private async Task CreateAssistant()
@@ -58,7 +59,7 @@ public class AiUtil
         var response = await _httpClient.PostAsync("https://api.openai.com/v1/assistants", content);
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
 
         _assistantId = result["id"]!.ToString();
 
@@ -68,23 +69,23 @@ public class AiUtil
 
     private async Task<string> GetThread()
     {
-        if(_assistantId == "")
+        if (_assistantId == "")
             await CreateAssistant();
 
-        string tmp = _nextThreadId;
+        var tmp = _nextThreadId;
         _nextThreadId = await CreateThread();
         return tmp;
     }
 
     private async Task UpdateThreads()
     {
-        for (int i = 0; i < _threads.Count; i++) {
-            if ((DateTime.Now - _threads[i].Time).TotalMinutes > 1) {
+        for (var i = 0; i < _threads.Count; i++)
+            if ((DateTime.Now - _threads[i].Time).TotalMinutes > 1)
+            {
                 await DeleteThread(_threads[i].ThreadId);
                 _threads.RemoveAt(i);
                 i--;
             }
-        }
     }
 
     private async Task DeleteThread(string threadId)
@@ -97,7 +98,7 @@ public class AiUtil
         var response = await _httpClient.PostAsync("https://api.openai.com/v1/threads", null);
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
         return result["id"]!.ToString();
     }
 
@@ -126,7 +127,7 @@ public class AiUtil
         var response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/messages", content);
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
 
         var runData = new
         {
@@ -148,7 +149,7 @@ public class AiUtil
         var responseContent = await response.Content.ReadAsStringAsync();
 
         // check if answer is included
-        JObject result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
         return result["status"]!.ToString() == "completed";
     }
 

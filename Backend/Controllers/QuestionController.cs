@@ -22,10 +22,7 @@ public class QuestionController(DataContext ctx) : ControllerBase
     {
         var question = await ctx.Questions.FindAsync(id);
 
-        if (question == null)
-        {
-            return NotFound("Question id not found!");
-        }
+        if (question == null) return NotFound("Question id not found!");
 
         return question;
     }
@@ -33,10 +30,10 @@ public class QuestionController(DataContext ctx) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Question>> AddQuestion(CreateQuestion question)
     {
-        var questionEntity = new Question()
+        var questionEntity = new Question
         {
             Text = question.Text,
-            Answers = question.Answers?.Select(answer => new Answer()
+            Answers = question.Answers?.Select(answer => new Answer
             {
                 Text = answer.Text,
                 User = answer.User
@@ -56,20 +53,17 @@ public class QuestionController(DataContext ctx) : ControllerBase
             .Include(q => q.Answers)
             .FirstOrDefaultAsync(q => q.Id == id);
 
-        if (questionEntity == null)
-        {
-            return NotFound("Question id not found!");
-        }
-        
+        if (questionEntity == null) return NotFound("Question id not found!");
+
         questionEntity.Text = question.Text;
-        
+
         if (questionEntity.Answers != null)
         {
             ctx.Answers.RemoveRange(questionEntity.Answers);
             questionEntity.Answers.Clear();
         }
-        
-        questionEntity.Answers = question.Answers?.Select(answer => new Answer()
+
+        questionEntity.Answers = question.Answers?.Select(answer => new Answer
         {
             Text = answer.Text,
             User = answer.User
@@ -93,15 +87,9 @@ public class QuestionController(DataContext ctx) : ControllerBase
         var question = await ctx.Questions
             .Include(q => q.Answers)
             .FirstOrDefaultAsync(q => q.Id == id);
-        if (question == null)
-        {
-            return NotFound("Question id not found!");
-        }
+        if (question == null) return NotFound("Question id not found!");
 
-        if (question.Answers != null)
-        {
-            ctx.Answers.RemoveRange(question.Answers);
-        }
+        if (question.Answers != null) ctx.Answers.RemoveRange(question.Answers);
 
         ctx.Questions.Remove(question);
         await ctx.SaveChangesAsync();

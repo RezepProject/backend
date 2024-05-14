@@ -10,7 +10,7 @@ namespace backend;
 public static class Program
 {
     public static IConfiguration config;
-    public static bool devMode = false;
+    public static bool devMode;
 
     public static async Task Main(string[] args)
     {
@@ -19,9 +19,9 @@ public static class Program
         config = builder.Configuration;
 
         builder.Services.AddDbContext<DataContext>(options
-                                                       => options
-                                                          .UseNpgsql(builder.Configuration["ConnectionString"])
-                                                          .UseSnakeCaseNamingConvention());
+            => options
+                .UseNpgsql(builder.Configuration["ConnectionString"])
+                .UseSnakeCaseNamingConvention());
 
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -46,7 +46,7 @@ public static class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 In = ParameterLocation.Header,
                 Description = @"JWT Authorization header using the Bearer scheme. <br />
@@ -87,10 +87,10 @@ public static class Program
 
         // TODO: change before production
         app.UseCors(b => b
-                         .WithOrigins("http://localhost:44398", "http://localhost:5260")
-                         .AllowAnyOrigin()
-                         .AllowAnyHeader()
-                         .AllowAnyMethod());
+            .WithOrigins("http://localhost:44398", "http://localhost:5260")
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

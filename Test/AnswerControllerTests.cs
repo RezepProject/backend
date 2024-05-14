@@ -1,11 +1,4 @@
-﻿using backend;
-using backend.Controllers;
-using backend.Entities;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NSubstitute;
-
-namespace Test;
+﻿namespace Test;
 
 public class AnswerControllerTest
 {
@@ -15,6 +8,3 @@ public class AnswerControllerTest
         Assert.True(true);
     }
 }
-
-
-

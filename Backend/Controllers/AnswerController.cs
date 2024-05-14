@@ -13,30 +13,24 @@ public class AnswerController(DataContext ctx) : ControllerBase
     {
         return await ctx.Answers.ToListAsync();
     }
-        
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Answer>> GetAnswer(int id)
     {
         var answer = await ctx.Answers.FindAsync(id);
 
-        if (answer == null)
-        {
-            return NotFound("Answer id not found!");
-        }
+        if (answer == null) return NotFound("Answer id not found!");
 
         return answer;
     }
-        
+
     [HttpPut("{id:int}")]
     public async Task<IActionResult> ChangeAnswer(int id, UpdateAnswer answer)
     {
         var answerToUpdate = await ctx.Answers.FindAsync(id);
 
-        if (answerToUpdate == null)
-        {
-            return NotFound("Answer id not found!");
-        }
-        
+        if (answerToUpdate == null) return NotFound("Answer id not found!");
+
         answerToUpdate.Text = answer.Text;
 
         ctx.Entry(answerToUpdate).State = EntityState.Modified;
@@ -44,7 +38,7 @@ public class AnswerController(DataContext ctx) : ControllerBase
         await ctx.SaveChangesAsync();
         return NoContent();
     }
-        
+
     [HttpPost]
     public async Task<ActionResult<Answer>> AddAnswer(Answer answer)
     {
@@ -53,15 +47,12 @@ public class AnswerController(DataContext ctx) : ControllerBase
 
         return CreatedAtAction("GetAnswer", new { id = answer.Id }, answer);
     }
-        
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAnswer(int id)
     {
         var answer = await ctx.Answers.FindAsync(id);
-        if (answer == null)
-        {
-            return NotFound("Answer id not found!");
-        }
+        if (answer == null) return NotFound("Answer id not found!");
 
         ctx.Answers.Remove(answer);
         await ctx.SaveChangesAsync();

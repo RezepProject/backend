@@ -16,13 +16,13 @@ public static class AuthenticationUtils
         var claims = new[]
         {
             // save inside of token
-            new Claim(ClaimTypes.NameIdentifier,login.UserIdentificator),
+            new Claim(ClaimTypes.NameIdentifier, login.UserIdentificator),
             new Claim(ClaimTypes.Role, roleId.ToString()),
-            new Claim(ClaimTypes.Sid, userId.ToString()),
+            new Claim(ClaimTypes.Sid, userId.ToString())
         };
 
         var timeout = 15;
-        if(Program.devMode) timeout = 4 * 60;
+        if (Program.devMode) timeout = 4 * 60;
 
         var token = new JwtSecurityToken(Program.config["Jwt:Issuer"],
             Program.config["Jwt:Audience"],
@@ -49,7 +49,11 @@ public static class AuthenticationUtils
         try
         {
             return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
-        } catch { return false; }
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public static async Task<int> AuthorizeUser(WebApplication app, HttpContext context)
@@ -77,7 +81,7 @@ public static class AuthenticationUtils
             if (token.ValidTo < DateTime.UtcNow) return 401;
 
             var rank = (await dataContext.ConfigUsers.Include(u => u.Role).FirstAsync(u => u.Id.ToString() == userId))
-                    .Role;
+                .Role;
 
             // Permission integration
             /* var perms = await dataContext.Permissions.Where(p => p.Ranks.Select(r => r.RankId).Contains(rank.RankId))
@@ -92,6 +96,9 @@ public static class AuthenticationUtils
 
             return rank == null ? 401 : 301;
         }
-        catch { return 500; }
+        catch
+        {
+            return 500;
+        }
     }
 }
