@@ -1,10 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
-using backend.Entities;
+﻿using backend.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend;
 
 public class DataContext : DbContext
 {
+    public DataContext()
+    {
+    }
+
+    public DataContext(DbContextOptions<DataContext> options)
+        : base(options)
+    {
+    }
+
     public DbSet<ConfigUser> ConfigUsers { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Config> Configs { get; set; }
@@ -14,20 +23,10 @@ public class DataContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Setting> Settings { get; set; }
 
-    public DataContext()
-    {
-    }
-    public DataContext(DbContextOptions<DataContext> options)
-        : base(options)
-    {
-    }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-        {
             entityType.SetTableName(entityType.DisplayName().ToLower());
-        }
 
         modelBuilder.UseSerialColumns();
         base.OnModelCreating(modelBuilder);
@@ -139,7 +138,7 @@ public class DataContext : DbContext
         configUserToken
             .HasOne(cut => cut.Role);
     }
-    
+
     private static void CreateRefreshToken(ModelBuilder modelBuilder)
     {
         var refreshToken = modelBuilder.Entity<RefreshToken>();

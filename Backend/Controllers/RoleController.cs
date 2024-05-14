@@ -1,4 +1,5 @@
 using backend.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +7,7 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class RoleController(DataContext ctx) : ControllerBase
 {
     [HttpGet]
@@ -25,10 +27,7 @@ public class RoleController(DataContext ctx) : ControllerBase
     public async Task<IActionResult> UpdateRole(int id, CreateRole newRole)
     {
         var role = await ctx.Roles.FindAsync(id);
-        if (role == null)
-        {
-            return NotFound("Role id not found!");
-        }
+        if (role == null) return NotFound("Role id not found!");
 
         role.Name = newRole.Name;
         ctx.Roles.Update(role);
@@ -58,10 +57,7 @@ public class RoleController(DataContext ctx) : ControllerBase
     public async Task<IActionResult> DeleteRole(int id)
     {
         var role = await ctx.Roles.FindAsync(id);
-        if (role == null)
-        {
-            return NotFound("Role id not found!");
-        }
+        if (role == null) return NotFound("Role id not found!");
 
         ctx.Roles.Remove(role);
         await ctx.SaveChangesAsync();

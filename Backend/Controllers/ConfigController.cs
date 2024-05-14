@@ -1,12 +1,14 @@
-using Microsoft.AspNetCore.Mvc;
-using backend.Entities;
-using Microsoft.EntityFrameworkCore;
 using System.Net;
+using backend.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class ConfigController(DataContext ctx) : ControllerBase
 {
     [HttpGet]
@@ -14,20 +16,17 @@ public class ConfigController(DataContext ctx) : ControllerBase
     {
         return await ctx.Configs.ToListAsync();
     }
-        
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Config>> GetConfig(int id)
     {
         var config = await ctx.Configs.FindAsync(id);
 
-        if (config == null)
-        {
-            return NotFound("Config not found!");
-        }
+        if (config == null) return NotFound("Config not found!");
 
         return config;
     }
-        
+
     [HttpPost]
     public async Task<ActionResult<Config>> AddConfig(CreateConfig config)
     {
@@ -42,16 +41,13 @@ public class ConfigController(DataContext ctx) : ControllerBase
 
         return CreatedAtAction("GetConfig", new { id = newConfig.Id }, newConfig);
     }
-        
+
     [HttpPut("{id:int}")]
     public async Task<IActionResult> ChangeConfig(int id, CreateConfig config)
     {
         var configToUpdate = await ctx.Configs.FindAsync(id);
 
-        if (configToUpdate == null)
-        {
-            return NotFound("Config not found!");
-        }
+        if (configToUpdate == null) return NotFound("Config not found!");
 
         configToUpdate.Title = config.Title;
         configToUpdate.Value = config.Value;
@@ -67,15 +63,12 @@ public class ConfigController(DataContext ctx) : ControllerBase
 
         return NoContent();
     }
-        
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteConfig(int id)
     {
         var config = await ctx.Configs.FindAsync(id);
-        if (config == null)
-        {
-            return NotFound("Config not found!");
-        }
+        if (config == null) return NotFound("Config not found!");
 
         ctx.Configs.Remove(config);
         await ctx.SaveChangesAsync();
