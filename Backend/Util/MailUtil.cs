@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Mail;
+using System.Text;
 
 namespace backend.Util;
 
@@ -14,12 +15,14 @@ public static class MailUtil
     {
         try
         {
-            var smtpClient = new SmtpClient(Program.config["Mail:Host"], int.Parse(Program.config["Mail:Port"] ?? string.Empty));
+            var smtpClient = new SmtpClient(Program.config["Mail:Host"],
+                int.Parse(Program.config["Mail:Port"] ?? string.Empty));
 
             // set smtp-client with basicAuthentication
             smtpClient.UseDefaultCredentials = false;
             smtpClient.EnableSsl = true;
-            smtpClient.Credentials = new NetworkCredential(Program.config["Mail:Address"], Program.config["Mail:Password"]);
+            smtpClient.Credentials =
+                new NetworkCredential(Program.config["Mail:Address"], Program.config["Mail:Password"]);
 
             // add from / to mail addresses
             var from = new MailAddress(Program.config["Mail:Address"] ?? string.Empty, "Rezep");
@@ -32,11 +35,11 @@ public static class MailUtil
 
             // set subject and encoding
             mail.Subject = subject;
-            mail.SubjectEncoding = System.Text.Encoding.UTF8;
+            mail.SubjectEncoding = Encoding.UTF8;
 
             // set body-message and encoding
             mail.Body = body;
-            mail.BodyEncoding = System.Text.Encoding.UTF8;
+            mail.BodyEncoding = Encoding.UTF8;
             // text or html
             mail.IsBodyHtml = true;
 

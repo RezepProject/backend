@@ -21,8 +21,8 @@ public class ConfigUser
 
     public DateTime TokenExpires
     {
-        get { return _tokenExpires; }
-        set { _tokenExpires = value.ToUniversalTime(); }
+        get => _tokenExpires;
+        set => _tokenExpires = value.ToUniversalTime();
     }
 }
 
