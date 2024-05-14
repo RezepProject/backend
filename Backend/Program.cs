@@ -1,5 +1,4 @@
 using System.Text;
-using backend.Hubs;
 using backend.Util;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +10,7 @@ namespace backend;
 public static class Program
 {
     public static IConfiguration config;
+    public static bool devMode;
 
     public static async Task Main(string[] args)
     {
@@ -19,9 +19,9 @@ public static class Program
         config = builder.Configuration;
 
         builder.Services.AddDbContext<DataContext>(options
-                                                       => options
-                                                          .UseNpgsql(builder.Configuration["ConnectionString"])
-                                                          .UseSnakeCaseNamingConvention());
+            => options
+                .UseNpgsql(builder.Configuration["ConnectionString"])
+                .UseSnakeCaseNamingConvention());
 
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -46,7 +46,7 @@ public static class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 In = ParameterLocation.Header,
                 Description = @"JWT Authorization header using the Bearer scheme. <br />
@@ -77,8 +77,6 @@ public static class Program
             });
         });
 
-        builder.Services.AddSignalR();
-
         var app = builder.Build();
 
         using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
@@ -89,14 +87,15 @@ public static class Program
 
         // TODO: change before production
         app.UseCors(b => b
-                         .WithOrigins("http://localhost:44398", "http://localhost:5260")
-                         .AllowAnyOrigin()
-                         .AllowAnyHeader()
-                         .AllowAnyMethod());
+            .WithOrigins("http://localhost:44398", "http://localhost:5260", "http://localhost:8080")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
+            devMode = true;
             app.UseSwagger();
             app.UseSwaggerUI();
         }
@@ -113,7 +112,6 @@ public static class Program
         // app.UseAuthorization();
 
         app.MapControllers();
-        app.MapHub<ConnectionStateHub>("/hubs/connection");
 
         AiUtil.GetInstance();
 
