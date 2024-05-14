@@ -42,7 +42,7 @@ public class QuestionController(DataContext ctx) : ControllerBase
                 User = answer.User
             }).ToList()
         };
-        
+
         ctx.Questions.Add(questionEntity);
         await ctx.SaveChangesAsync();
 
@@ -50,14 +50,30 @@ public class QuestionController(DataContext ctx) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> UpdateQuestion(int id, Question question)
+    public async Task<IActionResult> UpdateQuestion(int id, CreateQuestion question)
     {
-        if (id != question.Id)
-        {
-            return BadRequest("Question id not valid!");
-        }
+        var questionEntity = await ctx.Questions
+            .Include(q => q.Answers)
+            .FirstOrDefaultAsync(q => q.Id == id);
 
-        ctx.Entry(question).State = EntityState.Modified;
+        if (questionEntity == null)
+        {
+            return NotFound("Question id not found!");
+        }
+        
+        questionEntity.Text = question.Text;
+        
+        if (questionEntity.Answers != null)
+        {
+            ctx.Answers.RemoveRange(questionEntity.Answers);
+            questionEntity.Answers.Clear();
+        }
+        
+        questionEntity.Answers = question.Answers?.Select(answer => new Answer()
+        {
+            Text = answer.Text,
+            User = answer.User
+        }).ToList();
 
         try
         {
@@ -65,7 +81,7 @@ public class QuestionController(DataContext ctx) : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            return QuestionExists(id) ? StatusCode((int) HttpStatusCode.InternalServerError) : NotFound();
+            return StatusCode((int)HttpStatusCode.InternalServerError);
         }
 
         return NoContent();
@@ -74,10 +90,17 @@ public class QuestionController(DataContext ctx) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteQuestion(int id)
     {
-        var question = await ctx.Questions.FindAsync(id);
+        var question = await ctx.Questions
+            .Include(q => q.Answers)
+            .FirstOrDefaultAsync(q => q.Id == id);
         if (question == null)
         {
             return NotFound("Question id not found!");
+        }
+
+        if (question.Answers != null)
+        {
+            ctx.Answers.RemoveRange(question.Answers);
         }
 
         ctx.Questions.Remove(question);

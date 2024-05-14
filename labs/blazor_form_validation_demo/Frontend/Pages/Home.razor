@@ -1,0 +1,39 @@
+﻿@page "/"
+@using Shared
+@inject IHttpClientFactory ClientFactory
+
+<MudForm @ref="@_form" Model="@_model" Validation="@_validator.ValidateValue" ValidationDelay="0">
+    <MudTextField @bind-Value="@_model.Foo" Label="Foo" For="() => _model.Foo" Immediate="@true"/>
+    <MudNumericField @bind-Value="@_model.Bar" Label="Bar" For="() => _model.Bar" Immediate="@true"/>
+    <MudCheckBox @bind-Value="@_model.Baz" Label="Baz" For="() => _model.Baz"/>
+    <MudButton ButtonType="ButtonType.Button" OnClick="@Submit">Submit</MudButton>
+</MudForm>
+
+@code {
+
+    private MudForm _form = default!;
+    private readonly SampleRequest _model = new();
+    private readonly SampleRequest.Validator _validator = new();
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            return;
+        }
+
+        // in a real app this would be a service etc.
+        var client = ClientFactory.CreateClient();
+        var res = await client.PostAsJsonAsync("http://localhost:5295/samples", _model);
+        if (res.IsSuccessStatusCode)
+        {
+            Console.WriteLine("Hurray");
+        }
+        else
+        {
+            Console.WriteLine("Doh");
+        }
+    }
+
+}
