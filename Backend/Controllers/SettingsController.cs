@@ -8,7 +8,7 @@ namespace backend.Controllers;
 [Route("[controller]")]
 public class SettingsController(DataContext ctx) : ControllerBase
 {
-[HttpGet]
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<Setting>>> GetSettings()
     {
         return await ctx.Settings.ToListAsync();
@@ -25,10 +25,7 @@ public class SettingsController(DataContext ctx) : ControllerBase
     public async Task<IActionResult> UpdateSetting(int id, CreateSetting newSetting)
     {
         var setting = await ctx.Settings.FindAsync(id);
-        if (setting == null)
-        {
-            return NotFound("Setting id not found!");
-        }
+        if (setting == null) return NotFound("Setting id not found!");
 
         setting.Name = newSetting.Name;
         setting.BackgroundImage = newSetting.BackgroundImage;

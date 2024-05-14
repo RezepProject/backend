@@ -1,11 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using backend.Entities;
 using backend.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace backend.Controllers;
 
@@ -21,16 +18,16 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
         if (user == null) user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Email == login.UserIdentificator); */
 
         var user = await ctx.ConfigUsers
-            .FirstOrDefaultAsync(u => u.Email == login.UserIdentificator) 
+                       .FirstOrDefaultAsync(u => u.Email == login.UserIdentificator)
                    ?? await ctx.ConfigUsers
-            .FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator);
+                       .FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator);
 
         if (user == null || !AuthenticationUtils.VerifyPassword(login.Password, user.Password))
         {
             await Task.Delay(3000);
             return Unauthorized();
         }
-        
+
         var refreshToken = GenerateRefreshToken();
         await SetRefreshToken(refreshToken, user);
 
@@ -41,15 +38,10 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
     public async Task<ActionResult> ApplyToken(CreateConfigUser user)
     {
         var token = await ctx.ConfigUserTokens.FirstOrDefaultAsync(token => token.Token == user.Token);
-        if (token == null)
-        {
-            return NotFound("Token not found");
-        }
+        if (token == null) return NotFound("Token not found");
 
         if (token.CreatedAt.ToUniversalTime().AddDays(1) < DateTime.Now.ToUniversalTime())
-        {
             return BadRequest("Token expired");
-        }
 
         var newUser = new ConfigUser
         {
@@ -74,29 +66,20 @@ public class AuthenticationController(DataContext ctx) : ControllerBase
         var refreshToken = Request.Cookies["refreshToken"];
         var user = await ctx.ConfigUsers.FindAsync(userId);
 
-        if (user == null)
-        {
-            return BadRequest("User not found.");
-        }
-        
-        
-        if (!user.RefreshToken.Equals(refreshToken))
-        {
-            return Unauthorized("Invalid Refresh Token.");
-        }
+        if (user == null) return BadRequest("User not found.");
 
-        if (user.TokenExpires < DateTime.Now)
-        {
-            return Unauthorized("Token expired.");
-        }
 
-        Login login = new Login()
+        if (!user.RefreshToken.Equals(refreshToken)) return Unauthorized("Invalid Refresh Token.");
+
+        if (user.TokenExpires < DateTime.Now) return Unauthorized("Token expired.");
+
+        var login = new Login
         {
             Password = user.Password,
             UserIdentificator = user.Email
         };
 
-        string token = AuthenticationUtils.GenerateJwtToken(login, user.Id, user.RoleId);
+        var token = AuthenticationUtils.GenerateJwtToken(login, user.Id, user.RoleId);
         var newRefreshToken = GenerateRefreshToken();
         await SetRefreshToken(newRefreshToken, user);
 

@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using System.Drawing;
-using System.Net;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
-
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers;
 
@@ -11,11 +9,6 @@ namespace backend.Controllers;
 [Route("[controller]")]
 public class StreamingController : ControllerBase
 {
-    public class FrameObject
-    {
-        public string Data { get; set; } = "";
-    }
-
     [HttpPost]
     public ActionResult<string> SendFrame([FromBody] FrameObject frame)
     {
@@ -35,5 +28,10 @@ public class StreamingController : ControllerBase
 
             return Ok(faces);
         }
+    }
+
+    public class FrameObject
+    {
+        public string Data { get; set; } = "";
     }
 }

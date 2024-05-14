@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Text;
 using backend.Entities;
 using backend.Util;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +14,9 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
     [HttpPost]
     public async Task<ActionResult> PostUser(CreateUserToken user)
     {
-        if (await EmailIsUsed(user.Email))
-        {
-            return BadRequest("Email is already used!");
-        }
+        if (await EmailIsUsed(user.Email)) return BadRequest("Email is already used!");
 
-        var userToken = new ConfigUserToken()
+        var userToken = new ConfigUserToken
         {
             Email = user.Email,
             RoleId = user.RoleId,
@@ -39,7 +35,7 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ReturnConfigUser>>> GetUsers()
     {
-        return (await ctx.ConfigUsers.ToListAsync()).Select(user => new ReturnConfigUser()
+        return (await ctx.ConfigUsers.ToListAsync()).Select(user => new ReturnConfigUser
         {
             Email = user.Email,
             FirstName = user.FirstName,
@@ -55,7 +51,7 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
         var user = await UserExists(id);
         return user == null
             ? NotFound("User not found")
-            : new ReturnConfigUser()
+            : new ReturnConfigUser
             {
                 Email = user.Email,
                 FirstName = user.FirstName,
@@ -82,10 +78,7 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
     public async Task<IActionResult> DeleteInvitation(int id)
     {
         var user = await ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
-        if (user == null)
-        {
-            return NotFound("User not found");
-        }
+        if (user == null) return NotFound("User not found");
 
         ctx.ConfigUserTokens.Remove(user);
         await ctx.SaveChangesAsync();
@@ -96,10 +89,7 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
     public async Task<IActionResult> ResendInvitation(int id)
     {
         var user = await ctx.ConfigUserTokens.FirstOrDefaultAsync(u => u.Id == id);
-        if (user == null)
-        {
-            return NotFound("User not found");
-        }
+        if (user == null) return NotFound("User not found");
 
         user.Token = Guid.NewGuid();
         user.CreatedAt = DateTime.Now.ToUniversalTime();
@@ -115,10 +105,7 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
     public async Task<IActionResult> DeleteUser(int id)
     {
         var user = await UserExists(id);
-        if (user == null)
-        {
-            return NotFound("User not found");
-        }
+        if (user == null) return NotFound("User not found");
 
         ctx.ConfigUsers.Remove(user);
         await ctx.SaveChangesAsync();
@@ -129,15 +116,9 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
     public async Task<IActionResult> PutUser(int id, ChangeConfigUser user)
     {
         var userToUpdate = await UserExists(id);
-        if (userToUpdate == null)
-        {
-            return NotFound("User not found");
-        }
+        if (userToUpdate == null) return NotFound("User not found");
 
-        if (await EmailIsUsed(user.Email))
-        {
-            return BadRequest("Email is already used");
-        }
+        if (await EmailIsUsed(user.Email)) return BadRequest("Email is already used");
 
         userToUpdate.Email = user.Email;
         userToUpdate.FirstName = user.FirstName;
@@ -162,10 +143,7 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
     public async Task<IActionResult> ChangePassword(int id, [Required] string newPassword)
     {
         var user = await UserExists(id);
-        if (user == null)
-        {
-            return NotFound("User not found");
-        }
+        if (user == null) return NotFound("User not found");
 
         user.Password = AuthenticationUtils.HashPassword(newPassword);
         ctx.ConfigUsers.Update(user);
@@ -195,7 +173,7 @@ public class ConfigUserController(DataContext ctx) : ControllerBase
 
     private static string CreateHtmlMailTemplate(Guid token)
     {
-        string htmlContent = System.IO.File.ReadAllText("Resources/InviteMail.html");
+        var htmlContent = System.IO.File.ReadAllText("Resources/InviteMail.html");
 
         htmlContent = htmlContent.Replace("{GUID}", token.ToString());
 

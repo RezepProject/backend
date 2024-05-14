@@ -11,7 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="FluentAssertions" Version="7.0.0-alpha.3"/>
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="8.0.4" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="8.0.4"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0"/>
         <PackageReference Include="Moq.EntityFrameworkCore" Version="7.0.0.2"/>
         <PackageReference Include="NSubstitute" Version="5.1.0"/>

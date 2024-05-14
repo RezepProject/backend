@@ -13,7 +13,7 @@ public class RefreshToken
         set => _created = value.ToUniversalTime();
     }
 
-    public DateTime Expires 
+    public DateTime Expires
     {
         get => _expires;
         set => _expires = value.ToUniversalTime();
