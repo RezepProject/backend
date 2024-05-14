@@ -25,39 +25,23 @@ public static class Program
 
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidAudience = builder.Configuration["Jwt:Audience"],
-                IssuerSigningKey =
-                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] + ""))
-            };
-        });
-
         builder.Services.AddControllers();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
             {
-                In = ParameterLocation.Header,
-                Description = @"JWT Authorization header using the Bearer scheme. <br />
-                      Enter 'Bearer' [space] and then your token in the text input below.<br />
-                      Example: 'Bearer 12345abcdef'",
-                Name = "Authorization",
-                Type = SecuritySchemeType.ApiKey,
+                Name         = "Authorization",
+                Type         = SecuritySchemeType.ApiKey,
+                Scheme       = "Bearer",
                 BearerFormat = "JWT",
-                Scheme = "Bearer"
+                In           = ParameterLocation.Header,
+                Description  = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
+                               "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
+                               "Example: \"Bearer 1safsfsdfdfd\""
             });
-
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
@@ -66,15 +50,32 @@ public static class Program
                         Reference = new OpenApiReference
                         {
                             Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        },
-                        Scheme = "oauth2",
-                        Name = "Bearer",
-                        In = ParameterLocation.Header
+                            Id   = "Bearer"
+                        }
                     },
-                    new List<string>()
+                    new string[] { }
                 }
             });
+        });
+
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer           = true,
+                    ValidateAudience         = true,
+                    ValidateLifetime         = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience            = builder.Configuration["Jwt:Issuer"],
+                    IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                };
+            });
+
+        builder.Services.AddAuthorization(options =>
+        {
+            //options.AddPolicy("Admin", policy => policy.RequireClaim("IsAdmin"));
         });
 
         var app = builder.Build();
@@ -100,16 +101,7 @@ public static class Program
             app.UseSwaggerUI();
         }
 
-        app.Use(async (context, next) =>
-        {
-            var code = await AuthenticationUtils.AuthorizeUser(app, context);
-            if (code == 301) await next(context);
-            else context.Response.StatusCode = code;
-        });
-
         app.UseHttpsRedirection();
-
-        // app.UseAuthorization();
 
         app.MapControllers();
 

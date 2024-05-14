@@ -1,12 +1,14 @@
 using System.Drawing;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class StreamingController : ControllerBase
 {
     [HttpPost]

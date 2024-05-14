@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using backend.Entities;
 using backend.Util;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +9,11 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[AllowAnonymous]
 public class AuthenticationController(DataContext ctx) : ControllerBase
 {
-    [HttpPost(Name = "Authorize")]
-    public async Task<ActionResult<string>> Login([FromBody] Login login)
+    [HttpPost]
+    public async Task<IActionResult> Login([FromBody] Login login)
     {
         // login with username or email
         /* var user = await _ctx.ConfigUsers.FirstOrDefaultAsync(u => u.Id.ToString() == login.UserIdentificator);
