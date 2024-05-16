@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace backend.Hubs;
 
-public class ConnectionStateHub : Hub
+[Authorize]
+public class ConnectionControllerHub : Hub
 {
     public override Task OnConnectedAsync()
     {

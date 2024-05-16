@@ -1,4 +1,5 @@
 using System.Text;
+using backend.Hubs;
 using backend.Util;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -77,6 +78,18 @@ public static class Program
         {
             //options.AddPolicy("Admin", policy => policy.RequireClaim("IsAdmin"));
         });
+        
+        builder.Services.AddSignalR();
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(p =>
+            {
+                p.AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowAnyOrigin();
+            });
+        });
 
         var app = builder.Build();
 
@@ -87,11 +100,17 @@ public static class Program
         }
 
         // TODO: change before production
-        app.UseCors(b => b
-            .WithOrigins("http://localhost:44398", "http://localhost:5260", "http://localhost:8080")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials());
+        /*app.UseCors(cors  =>
+        {
+            cors.WithOrigins("http://localhost:8080", "http://localhost:5260", "http://localhost:44398", "http://localhost:3000", "http://localhost:8081", "http://localhost:7206", "http://localhost:5260", "http://localhost:5001", "http://localhost:7206/")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });*/
+        
+        
+        
+        app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -104,6 +123,7 @@ public static class Program
         app.UseHttpsRedirection();
 
         app.MapControllers();
+        app.MapHub<ConnectionControllerHub>("/hubs/connection");
 
         AiUtil.GetInstance();
 
