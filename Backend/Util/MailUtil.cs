@@ -22,7 +22,7 @@ public static class MailUtil
             smtpClient.UseDefaultCredentials = false;
             smtpClient.EnableSsl = true;
             smtpClient.Credentials =
-                new NetworkCredential(Program.config["Mail:Address"], Program.config["Mail:Password"]);
+                new NetworkCredential(Program.config["Mail:Address"], Program.config["Mail:Key"]);
 
             // add from / to mail addresses
             var from = new MailAddress(Program.config["Mail:Address"] ?? string.Empty, "Rezep");
