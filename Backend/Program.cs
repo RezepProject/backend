@@ -23,6 +23,10 @@ public static class Program
                 .UseNpgsql(builder.Configuration["ConnectionString"])
                 .UseSnakeCaseNamingConvention());
 
+        builder.Configuration.AddJsonFile("secrets.json",
+            optional: true,
+            reloadOnChange: true);
+
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
         builder.Services.AddControllers();
@@ -40,7 +44,7 @@ public static class Program
                 In           = ParameterLocation.Header,
                 Description  = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
                                "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
-                               "Example: \"Bearer 1safsfsdfdfd\""
+                               "Example: \"Bearer {token}\""
             });
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
             {

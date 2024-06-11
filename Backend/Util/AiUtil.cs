@@ -15,7 +15,6 @@ public class AiUtil
 {
     private static AiUtil? _aiUtil;
     private string _assistantId = "";
-    private string[] _files = [];
 
     private readonly HttpClient _httpClient = new();
     private string _nextThreadId = "";
@@ -24,8 +23,8 @@ public class AiUtil
     private AiUtil()
     {
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", Program.config["OpenAiKey"] ?? string.Empty);
-        _httpClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
+            new AuthenticationHeaderValue("Bearer", Program.config["OpenAi:Key"] ?? string.Empty);
+        _httpClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v1");
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         CreateAssistant().Wait();
@@ -38,8 +37,6 @@ public class AiUtil
 
     private async Task CreateAssistant()
     {
-        // upload files
-
         // create assistant
         var assistantData = new
         {
