@@ -12,6 +12,7 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
     {
         public string Question { get; set; }
         public string? SessionId { get; set; }
+        public string? Language { get; set; }
     }
 
     public class UserResponse
@@ -27,10 +28,11 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         DateTime start = DateTime.Now;
         string question = userRequest.Question;
         string? sessionId = userRequest.SessionId;
+        string language = userRequest.Language ?? "en-US";
 
         var aiUtil = AiUtil.GetInstance();
 
-        var (runId, threadId) = await aiUtil.AskQuestion(sessionId, question);
+        var (runId, threadId) = await aiUtil.AskQuestion(sessionId, question, language);
 
         bool isCompleted = false;
         bool firstRun = true;
