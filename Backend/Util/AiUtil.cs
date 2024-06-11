@@ -25,7 +25,7 @@ public class AiUtil
     {
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Program.config["OpenAiKey"] ?? string.Empty);
-        _httpClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v1");
+        _httpClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         CreateAssistant().Wait();
@@ -52,7 +52,7 @@ public class AiUtil
                            "of the reception. Always write short answers up to 50 words! " +
                            "You dont have to rewrite every answer, just answer the question faster instead.",
             name = "Rezep",
-            model = "gpt-4-1106-preview"
+            model = "gpt-4o"
         };
 
         var content = new StringContent(JsonConvert.SerializeObject(assistantData), Encoding.UTF8, "application/json");
@@ -60,7 +60,7 @@ public class AiUtil
         var responseContent = await response.Content.ReadAsStringAsync();
 
         var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
-
+        Console.WriteLine(result);
         _assistantId = result["id"]!.ToString();
 
         // create thread
