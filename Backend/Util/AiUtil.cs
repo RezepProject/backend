@@ -117,7 +117,7 @@ public class AiUtil
         var messageData = new
         {
             role = "user",
-            content = $"{question}. Using the {language} language for your answer.",
+            content = $"{question}. Use ISO 639-1 standard language code {language} for your answer.",
             // file_ids = files,
         };
 
