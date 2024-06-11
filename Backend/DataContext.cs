@@ -150,6 +150,15 @@ public class DataContext : DbContext
     private static void CreateSetting(ModelBuilder modelBuilder)
     {
         var setting = modelBuilder.Entity<Setting>();
+        setting.HasData(new Setting()
+        {
+            Id = 1,
+            Name = "Rezep-1",
+            BackgroundImage = "https://example.com/image.jpg",
+            GreetingMessage = "Hello, how can I help you?",
+            Language = "en-US",
+            TalkingSpeed = 0.7,
+        });
         setting
             .Property(s => s.Id)
             .UseIdentityColumn();
