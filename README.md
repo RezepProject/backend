@@ -18,32 +18,7 @@ values ('test', 'test', 'test', '$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGP
 ## Setup Backend
 
 1. Download and install Nugets
-2. Setup appsettings.json
-```
-{
-  "Urls": "http://localhost:5260",
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "Mail": {
-    "Host": "smtp.gmail.com",
-    "Port": 587,
-    "Address": "<EMAIL ADDRESS>",
-    "Password": "<APP SPECIFIC PASSWORT>"
-  },
-  "Jwt": {
-    "Key": "<SHA356-KEY>",
-    "Issuer": "http://localhost:PORT",
-    "Audience": "http://localhost:PORT"
-  },
-  "AllowedHosts": "*",
-  "ConnectionString": "Host=localhost;Database=database;Username=name;Password=password"
-}
-```
-
+2. Setup appsettings.json & secrets.json
 3. Run the application
 
 ## Known Issues
