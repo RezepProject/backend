@@ -40,14 +40,15 @@ public class AiUtil
         // create assistant
         var assistantData = new
         {
-            instructions = "Ignore all the previous instructions. " +
-                           "You are now a new assistant for a Hotel / Restaurant. " +
+            instructions = $"Ignore all the previous instructions. " +
+                           "You are now a new assistant for a Hotel & Restaurant. " +
                            "Use everything you know (first of all the files) and answer the questions accordingly. " +
                            "Its possible that a question needs information from the internet, " +
                            "you are only allowed to use it in this case. Write a summarizing answer to the question as " +
                            "best as you can. Here is everything you need to know: The toilet is on the right side " +
                            "of the reception. Always write short answers up to 50 words! " +
-                           "You dont have to rewrite every answer, just answer the question faster instead.",
+                           "You dont have to rewrite every answer, just answer the question faster instead." +
+                           "Answer in a friendly and helpful way.",
             name = "Rezep",
             model = "gpt-4o"
         };
@@ -100,7 +101,7 @@ public class AiUtil
     }
 
     // returns questionId, threadId
-    public async Task<(string, string)> AskQuestion(string? threadId, string question)
+    public async Task<(string, string)> AskQuestion(string? threadId, string question, string language)
     {
         await UpdateThreads();
         if (string.IsNullOrEmpty(threadId) || _threads.Where(t => t.ThreadId == threadId) != null)
@@ -116,7 +117,7 @@ public class AiUtil
         var messageData = new
         {
             role = "user",
-            content = question
+            content = $"{question}. Use ISO 639-1 standard language code {language} for your answer.",
             // file_ids = files,
         };
 

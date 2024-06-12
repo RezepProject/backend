@@ -4,12 +4,6 @@ public class Setting
 {
     public Setting()
     {
-        Name = "Rezep - " + new Guid();
-        Language = "de-DE";
-        TalkingSpeed = 0.7;
-        GreetingMessage = "Hallo, ich bin Rezep. Wie kann ich Ihnen helfen?";
-        // TODO: implement State
-        State = true;
     }
 
     public int Id { get; set; }
