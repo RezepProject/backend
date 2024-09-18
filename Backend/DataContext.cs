@@ -18,6 +18,7 @@ public class DataContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<Config> Configs { get; set; }
     public DbSet<Question> Questions { get; set; }
+    public DbSet<QuestionCategory> QuestionCategories { get; set; }
     public DbSet<Answer> Answers { get; set; }
     public DbSet<ConfigUserToken> ConfigUserTokens { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -35,6 +36,7 @@ public class DataContext : DbContext
         CreateRole(modelBuilder);
         CreateConfig(modelBuilder);
         CreateQuestion(modelBuilder);
+        CreateQuestionCategory(modelBuilder);
         CreateAnswer(modelBuilder);
         CreateConfigUserToken(modelBuilder);
         CreateRefreshToken(modelBuilder);
@@ -96,15 +98,18 @@ public class DataContext : DbContext
     private static void CreateQuestion(ModelBuilder modelBuilder)
     {
         var question = modelBuilder.Entity<Question>();
-        question
-            .Property(q => q.Id)
-            .UseIdentityColumn();
-        question
-            .Property(q => q.Text)
-            .IsRequired();
-        question
-            .HasMany(q => q.Answers);
+        question.Property(q => q.Id).UseIdentityColumn();
+        question.Property(q => q.Text).IsRequired();
+        question.HasMany(q => q.Categories).WithMany(c => c.Questions);
     }
+
+    private static void CreateQuestionCategory(ModelBuilder modelBuilder)
+    {
+        var questionCategory = modelBuilder.Entity<QuestionCategory>();
+        questionCategory.Property(c => c.Id).UseIdentityColumn();
+        questionCategory.Property(c => c.Name).IsRequired();
+    }
+
 
     private static void CreateAnswer(ModelBuilder modelBuilder)
     {
