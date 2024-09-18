@@ -46,9 +46,9 @@ public class AiUtil
                            "Its possible that a question needs information from the internet, " +
                            "you are only allowed to use it in this case. Write a summarizing answer to the question as " +
                            "best as you can. Here is everything you need to know: The toilet is on the right side " +
-                           "of the reception. Always write short answers up to 50 words! " +
-                           "You dont have to rewrite every answer, just answer the question faster instead." +
-                           "Answer in a friendly and helpful way.",
+                           "of the reception." +
+                           "You dont have to rewrite every answer, just answer the question faster instead. Our text should not contain lists, just talk like a normal person" +
+                           "Answer in a friendly and helpful way. Ask if you can help with other questions when you finished answering the question",
             name = "Rezep",
             model = "gpt-4o"
         };
