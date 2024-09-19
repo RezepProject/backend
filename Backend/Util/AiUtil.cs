@@ -15,10 +15,13 @@ public class AiUtil
 {
     private static AiUtil? _aiUtil;
     private string _assistantId = "";
+    private string _classifyAssistantId = "";
 
     private readonly HttpClient _httpClient = new();
     private string _nextThreadId = "";
+    private string _nextClassifyThreadId = "";
     private readonly List<ThreadTime> _threads = new();
+    private readonly List<ThreadTime> _classifyThreads = new();
 
     private AiUtil()
     {
@@ -28,6 +31,7 @@ public class AiUtil
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         CreateAssistant().Wait();
+        CreateClassifyAssistant().Wait();
     }
 
     public static AiUtil GetInstance()
@@ -64,6 +68,31 @@ public class AiUtil
         // create thread
         _nextThreadId = await CreateThread();
     }
+    
+    private async Task CreateClassifyAssistant()
+    {
+        // create assistant
+        var assistantData = new
+        {
+            instructions = $"Ignore all the previous instructions. You are an assistant for classifying questions. " +
+                           $"You get a question and you have to classify it with the categories: Music, Cooking, other" +  // TODO: Add categories
+                           $"Only answer in this format: <category_1>;<category_2>;..." +
+                           $"You can choose multiple categories, but at least one and at most 3.",
+            name = "Rezep-classify",
+            model = "gpt-4o"
+        };
+
+        var content = new StringContent(JsonConvert.SerializeObject(assistantData), Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync("https://api.openai.com/v1/assistants", content);
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+        Console.WriteLine(result);
+        _classifyAssistantId = result["id"]!.ToString();
+
+        // create thread
+        _nextThreadId = await CreateThread();
+    }
 
     private async Task<string> GetThread()
     {
@@ -74,6 +103,16 @@ public class AiUtil
         _nextThreadId = await CreateThread();
         return tmp;
     }
+    
+    private async Task<string> GetClassifyThread()
+    {
+        if (_classifyAssistantId == "")
+            await CreateClassifyAssistant();
+
+        var tmp = _nextThreadId;
+        _nextClassifyThreadId = await CreateThread();
+        return tmp;
+    }
 
     private async Task UpdateThreads()
     {
@@ -82,6 +121,17 @@ public class AiUtil
             {
                 await DeleteThread(_threads[i].ThreadId);
                 _threads.RemoveAt(i);
+                i--;
+            }
+    }
+    
+    private async Task UpdateClassifyThreads()
+    {
+        for (var i = 0; i < _classifyThreads.Count; i++)
+            if ((DateTime.Now - _classifyThreads[i].Time).TotalMinutes > 1)
+            {
+                await DeleteThread(_classifyThreads[i].ThreadId);
+                _classifyThreads.RemoveAt(i);
                 i--;
             }
     }
@@ -130,6 +180,46 @@ public class AiUtil
         var runData = new
         {
             assistant_id = _assistantId
+        };
+
+        content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
+        response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/runs", content);
+        responseContent = await response.Content.ReadAsStringAsync();
+
+        result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+
+        return (result["id"]!.ToString(), threadId);
+    }
+
+    public async Task<(string, string)> ClassifyQuestion(string? threadId, string question)
+    {
+        await UpdateClassifyThreads();
+        if (string.IsNullOrEmpty(threadId) || _classifyThreads.Where(t => t.ThreadId == threadId) != null)
+        {
+            threadId = await GetClassifyThread();
+            _classifyThreads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
+        }
+        else
+        {
+            _classifyThreads.FirstOrDefault(t => t.ThreadId == threadId)!.Time = DateTime.Now;
+        }
+        
+        var messageData = new
+        {
+            role = "user",
+            content = $"{question}",
+            // file_ids = files,
+        };
+
+        var content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/messages", content);
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+
+        var runData = new
+        {
+            _classifyAssistantId = _classifyAssistantId
         };
 
         content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");

@@ -56,4 +56,16 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
 
         return Ok(userResponse);
     }
+    
+    [HttpPost("classify-question")]
+    public async Task<ActionResult<string>> ClassifyQuestion([FromBody] UserRequest userRequest)
+    {
+        string question = userRequest.Question;
+        string? sessionId = userRequest.SessionId;
+        string language = userRequest.Language ?? "en-US";
+
+        var aiUtil = AiUtil.GetInstance();
+
+        return Ok(await aiUtil.ClassifyQuestion(sessionId, question));
+    }
 }
