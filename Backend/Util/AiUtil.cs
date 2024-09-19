@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
+using backend.Entities;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,8 +16,11 @@ internal class ThreadTime
 public class AiUtil
 {
     private static AiUtil? _aiUtil;
+    private DataContext _ctx;
     private string _assistantId = "";
     private string _classifyAssistantId = "";
+    private string _classifyAssistantThreadId = "";
+    private List<QuestionCategory> _categories = new();
 
     private readonly HttpClient _httpClient = new();
     private string _nextThreadId = "";
@@ -60,7 +65,6 @@ public class AiUtil
         var responseContent = await response.Content.ReadAsStringAsync();
 
         var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
-        Console.WriteLine(result);
         _assistantId = result["id"]!.ToString();
 
         // create thread
@@ -85,11 +89,7 @@ public class AiUtil
         var responseContent = await response.Content.ReadAsStringAsync();
 
         var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
-        Console.WriteLine(result);
         _classifyAssistantId = result["id"]!.ToString();
-
-        // create thread
-        _nextThreadId = await CreateThread();
     }
 
     private async Task<string> GetThread()
@@ -106,8 +106,10 @@ public class AiUtil
     {
         if (_classifyAssistantId == "")
             await CreateClassifyAssistant();
+        if (_classifyAssistantThreadId == "")
+            _classifyAssistantThreadId = await CreateThread();
 
-        return _classifyAssistantId;
+        return _classifyAssistantThreadId;
     }
 
     private async Task UpdateThreads()
@@ -136,17 +138,45 @@ public class AiUtil
     }
 
     // returns questionId, threadId
-    public async Task<(string, string)> AskQuestion(string? threadId, string question, string language)
+    public async Task<(string, string)> AskQuestion(DataContext ctx, string? threadId, string question,
+        string language, bool isClassification = false)
     {
-        await UpdateThreads();
-        if (string.IsNullOrEmpty(threadId) || _threads.Where(t => t.ThreadId == threadId) != null)
+        _ctx = ctx;
+
+        if (!isClassification)
         {
-            threadId = await GetThread();
-            _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
-        }
-        else
-        {
-            _threads.FirstOrDefault(t => t.ThreadId == threadId)!.Time = DateTime.Now;
+            await UpdateThreads();
+            if (string.IsNullOrEmpty(threadId) || _threads.Where(t => t.ThreadId == threadId) != null)
+            {
+                threadId = await GetThread();
+                _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
+            }
+            else
+            {
+                _threads.FirstOrDefault(t => t.ThreadId == threadId)!.Time = DateTime.Now;
+            }
+
+            var tmpCategories = await _ctx.QuestionCategories.ToListAsync();
+            if (tmpCategories.Count != _categories.Count)
+            {
+                _categories = tmpCategories;
+                await DeleteThread(_classifyAssistantThreadId);
+                _classifyAssistantThreadId = "";
+            }
+
+            if (_categories.Count == 0)
+            {
+                var tmpQuestions = await _ctx.Questions.ToListAsync();
+                if (tmpQuestions.Count > 0)
+                {
+                    string[] categories = (await ClassifyQuestion(question)).Split(";");
+                    tmpQuestions.Where(q => categories.Any(c => q.Categories.Any(c2 => c2.Name == c)));
+
+                    question = "Use this information: " + tmpQuestions.Select(q => q.Text)
+                                                            .Aggregate((a, b) => a + " " + b)
+                                                        + " to answer the question: " + question;
+                }
+            }
         }
 
         var messageData = new
@@ -164,7 +194,7 @@ public class AiUtil
 
         var runData = new
         {
-            assistant_id = _assistantId
+            assistant_id = isClassification ? _classifyAssistantId : _assistantId
         };
 
         content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
@@ -176,42 +206,12 @@ public class AiUtil
         return (result["id"]!.ToString(), threadId);
     }
 
-    public async Task<(string, string)> ClassifyQuestion(string? classifyThreadId, string question)
+    // returns questionId, threadId
+    public async Task<string> ClassifyQuestion(string question)
     {
-        if (string.IsNullOrEmpty(classifyThreadId))
-        {
-            classifyThreadId = await GetClassifyThread();
-        }
-        else
-        {
-            classifyThreadId = _classifyAssistantId;
-        }
-        
-        var messageData = new
-        {
-            role = "user",
-            content = $"{question}",
-            // file_ids = files,
-        };
-
-        var content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{classifyThreadId}/messages", content);
-        var responseContent = await response.Content.ReadAsStringAsync();
-
-        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
-
-        var runData = new
-        {
-            assistant_id = classifyThreadId
-        };
-
-        content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
-        response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{classifyThreadId}/runs", content);
-        responseContent = await response.Content.ReadAsStringAsync();
-
-        result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
-
-        return (result["id"]!.ToString(), classifyThreadId);
+        string runId = (await AskQuestion(_ctx, await GetClassifyThread(), question, "en-US", true)).Item1;
+        await WaitForResult(await GetClassifyThread(), runId);
+        return await GetResultString(await GetClassifyThread());
     }
 
     public async Task<bool> CheckStatus(string threadId, string runId)
@@ -235,5 +235,21 @@ public class AiUtil
     public async Task<string> GetResultString(string threadId)
     {
         return (await GetResult(threadId))["data"][0]["content"][0]["text"]["value"].ToString();
+    }
+
+    public async Task WaitForResult(string threadId, string runId)
+    {
+        bool isCompleted = false;
+        bool firstRun = true;
+        while (!isCompleted)
+        {
+            if (!firstRun)
+            {
+                await Task.Delay(500);
+            }
+
+            firstRun = false;
+            isCompleted = await CheckStatus(threadId, runId);
+        }
     }
 }

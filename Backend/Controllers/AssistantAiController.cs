@@ -32,20 +32,9 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
 
         var aiUtil = AiUtil.GetInstance();
 
-        var (runId, threadId) = await aiUtil.AskQuestion(sessionId, question, language);
+        var (runId, threadId) = await aiUtil.AskQuestion(ctx, sessionId, question, language);
 
-        bool isCompleted = false;
-        bool firstRun = true;
-        while (!isCompleted)
-        {
-            if (!firstRun)
-            {
-                await Task.Delay(500);
-            }
-
-            firstRun = false;
-            isCompleted = await aiUtil.CheckStatus(threadId, runId);
-        }
+        await aiUtil.WaitForResult(threadId, runId);
 
         UserResponse userResponse = new UserResponse()
         {
@@ -55,17 +44,5 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         };
 
         return Ok(userResponse);
-    }
-    
-    [HttpPost("classify-question")]
-    public async Task<ActionResult<string>> ClassifyQuestion([FromBody] UserRequest userRequest)
-    {
-        string question = userRequest.Question;
-        string? sessionId = userRequest.SessionId;
-        string language = userRequest.Language ?? "en-US";
-
-        var aiUtil = AiUtil.GetInstance();
-
-        return Ok(await aiUtil.ClassifyQuestion(sessionId, question));
     }
 }
