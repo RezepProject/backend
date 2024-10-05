@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
+using backend.Entities;
 using backend.Util;
 using Newtonsoft.Json;
 
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 [Route("[controller]")]
 public class AssistantAiRouter(DataContext ctx) : ControllerBase
 {
+    private static MistralUtil _mistralUtil = new();
     public class UserRequest
     {
         public string Question { get; set; }
@@ -62,31 +64,10 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
     }
 
     [HttpPost("mistral")]
-    public async Task<ActionResult<string>> GetAiResponseMistral([FromBody] string question)
+    public async Task<ActionResult<UserResponse>> GetAiResponseMistral([FromBody] MistralUserQuestion question)
     {
-        string key = Program.config["MistralAi:Key"];
-        using var httpClient = new HttpClient();
-
-        var requestData = new
-        {
-            agent_id = "ag:0f95780e:20240929:untitled-agent:fd65062b",
-            messages = new[]
-            {
-                new
-                {
-                    role = "user",
-                    content = question
-                }
-            }
-        };
-
-        var content = new StringContent(JsonConvert.SerializeObject(requestData), Encoding.UTF8, "application/json");
-        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", key);
-
-        var response = await httpClient.PostAsync("https://api.mistral.ai/v1/agents/completions", content);
-        var responseContent = await response.Content.ReadAsStringAsync();
-
-        return Ok(responseContent);
+        var (answer, thread) = await _mistralUtil.AskQuestion(question.ThreadId, question.Question);
+        
+        return Ok(new { Answer = answer, ThreadId = thread });
     }
 }
