@@ -16,13 +16,15 @@ public class QuestionController(DataContext ctx) : ControllerBase
     {
         return await ctx.Questions
             .Include(q => q.Answers)
+            .Include(q => q.Categories)
             .ToListAsync();
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Question>> GetQuestion(int id)
     {
-        var question = await ctx.Questions.FindAsync(id);
+        var question = await ctx.Questions
+            .FindAsync(id);
 
         if (question == null) return NotFound("Question id not found!");
 
@@ -35,6 +37,10 @@ public class QuestionController(DataContext ctx) : ControllerBase
         var questionEntity = new Question
         {
             Text = question.Text,
+            Categories = question.Categories.Select(c => new QuestionCategory()
+            {
+                Name = c.Name
+            }).ToList(),
             Answers = question.Answers?.Select(answer => new Answer
             {
                 Text = answer.Text,
@@ -58,6 +64,11 @@ public class QuestionController(DataContext ctx) : ControllerBase
         if (questionEntity == null) return NotFound("Question id not found!");
 
         questionEntity.Text = question.Text;
+
+        questionEntity.Categories = question.Categories.Select(c => new QuestionCategory()
+        {
+            Name = c.Name
+        }).ToList();
 
         if (questionEntity.Answers != null)
         {
