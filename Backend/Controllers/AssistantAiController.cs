@@ -55,7 +55,7 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
     [HttpPost("mistral")]
     public async Task<ActionResult<UserResponse>> GetAiResponseMistral([FromBody] MistralUserQuestion question)
     {
-        var (answer, thread) = await _mistralUtil.AskQuestion(question.ThreadId, question.Question);
+        var (answer, thread) = await _mistralUtil.AskQuestion(ctx, question.ThreadId, question.Question);
         
         return Ok(new { Answer = answer, ThreadId = thread });
     }
