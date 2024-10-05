@@ -38,20 +38,9 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
 
         var aiUtil = AiUtil.GetInstance();
 
-        var (runId, threadId) = await aiUtil.AskQuestion(sessionId, question, language);
+        var (runId, threadId) = await aiUtil.AskQuestion(ctx, sessionId, question, language);
 
-        bool isCompleted = false;
-        bool firstRun = true;
-        while (!isCompleted)
-        {
-            if (!firstRun)
-            {
-                await Task.Delay(500);
-            }
-
-            firstRun = false;
-            isCompleted = await aiUtil.CheckStatus(threadId, runId);
-        }
+        await aiUtil.WaitForResult(threadId, runId);
 
         UserResponse userResponse = new UserResponse()
         {
