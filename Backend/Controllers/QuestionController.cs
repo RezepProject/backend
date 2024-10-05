@@ -34,13 +34,29 @@ public class QuestionController(DataContext ctx) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Question>> AddQuestion(CreateQuestion question)
     {
+        List<QuestionCategory> categories = new();
+        
+        foreach (var category in question.Categories)
+        {
+            var categoryEntity = await ctx.QuestionCategories
+                .FirstOrDefaultAsync(c => c.Name == category.Name);
+            if (categoryEntity == null)
+            {
+                categoryEntity = new QuestionCategory
+                {
+                    Name = category.Name
+                };
+                ctx.QuestionCategories.Add(categoryEntity);
+                await ctx.SaveChangesAsync();
+            }
+
+            categories.Add(categoryEntity);
+        }
+
         var questionEntity = new Question
         {
             Text = question.Text,
-            Categories = question.Categories.Select(c => new QuestionCategory()
-            {
-                Name = c.Name
-            }).ToList(),
+            Categories = categories,
             Answers = question.Answers?.Select(answer => new Answer
             {
                 Text = answer.Text,
