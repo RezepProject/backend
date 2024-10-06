@@ -20,7 +20,7 @@ public class MistralUtil
             ? CreateNewThread(out threadId)
             : Threads.First(t => t.Id.ToString() == threadId);
 
-        thread.Messages.Add(new Message { Role = "user", Content = question });
+        thread.Messages.Add(new Message { role = "user", content = question });
 
         var classifyQuestions = await GetClassifyQuestions(ctx, question);
 
@@ -35,12 +35,13 @@ public class MistralUtil
 
             includedMessages.Add(new Message
             {
-                Role = "system",
-                Content = $"Use the following information: {previousQnA}"
+                role = "system",
+                content = $"Use the following information: {previousQnA}"
             });
         }
 
-        includedMessages.AddRange(thread.Messages.Select(m => new Message { Role = m.Role, Content = m.Content })
+        includedMessages.AddRange(thread.Messages
+            .Select(m => new Message { role = m.role, content = m.content })
             .ToList());
 
         var requestData = new
@@ -64,41 +65,12 @@ public class MistralUtil
             var contentMessage = message["content"]?.ToString();
             if (role != null && contentMessage != null)
             {
-                thread.Messages.Add(new Message { Role = role, Content = contentMessage });
-                return(contentMessage, threadId);
+                thread.Messages.Add(new Message { role = role, content = contentMessage });
+                return (responseContent, threadId);
             }
         }
 
         return (responseContent, threadId);
-    }
-
-    private static MistralThread CreateNewThread(out string threadId)
-    {
-        var newThread = new MistralThread();
-        Threads.Add(newThread);
-        threadId = newThread.Id.ToString();
-        return newThread;
-    }
-
-    private async Task<List<Question>> GetClassifyQuestions(DataContext ctx, string question)
-    {
-        var tmpCategories = await ctx.QuestionCategories.ToListAsync();
-        if (tmpCategories.Count != _categories.Count)
-        {
-            _categories = tmpCategories;
-        }
-
-        if (_categories.Count == 0)
-        {
-            var tmpQuestions = await ctx.Questions.ToListAsync();
-            if (tmpQuestions.Count > 0)
-            {
-                List<QuestionCategory> categories = (await ClassifyQuestion(question));
-                return tmpQuestions.Where(q => categories.Any(c => q.Categories.Any(c2 => c2.Name == c.Name))).ToList();
-            }
-        }
-
-        return new List<Question>();
     }
 
     private async Task<List<QuestionCategory>> ClassifyQuestion(string question)
@@ -111,7 +83,8 @@ public class MistralUtil
                 new
                 {
                     role = "system",
-                    content = $"Your categories are: {_categories.Select(c => c.Name).Aggregate((a, b) => a + ";" + b)}"
+                    content =
+                        $"Your categories are: {_categories.Select(c => c.Name).Aggregate((a, b) => $"{a};{b}")}"
                 },
                 new
                 {
@@ -145,5 +118,34 @@ public class MistralUtil
         }
 
         throw new Exception("Could not classify question");
+    }
+
+    private static MistralThread CreateNewThread(out string threadId)
+    {
+        var newThread = new MistralThread();
+        Threads.Add(newThread);
+        threadId = newThread.Id.ToString();
+        return newThread;
+    }
+
+    private async Task<List<Question>> GetClassifyQuestions(DataContext ctx, string question)
+    {
+        var tmpCategories = await ctx.QuestionCategories.ToListAsync();
+        if (tmpCategories.Count != _categories.Count)
+        {
+            _categories = tmpCategories;
+        }
+
+        if (_categories.Count == 0)
+        {
+            var tmpQuestions = await ctx.Questions.ToListAsync();
+            if (tmpQuestions.Count > 0)
+            {
+                List<QuestionCategory> categories = (await ClassifyQuestion(question));
+                return tmpQuestions.Where(q => categories.Any(c => q.Categories.Any(c2 => c2.Name == c.Name))).ToList();
+            }
+        }
+
+        return new List<Question>();
     }
 }
