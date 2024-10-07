@@ -1,4 +1,8 @@
-﻿using backend.Util;
+﻿using System.Net.Http.Headers;
+using System.Text;
+using backend.Entities;
+using backend.Util;
+using Newtonsoft.Json;
 
 namespace backend.Controllers;
 
@@ -8,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 [Route("[controller]")]
 public class AssistantAiRouter(DataContext ctx) : ControllerBase
 {
+    private static MistralUtil _mistralUtil = new();
     public class UserRequest
     {
         public string Question { get; set; }
@@ -21,6 +26,7 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         public string SessionId { get; set; }
         public string TimeNeeded { get; set; }
     }
+
 
     [HttpPost]
     public async Task<ActionResult<UserResponse>> GetAiResponse([FromBody] UserRequest userRequest)
@@ -44,5 +50,13 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         };
 
         return Ok(userResponse);
+    }
+
+    [HttpPost("mistral")]
+    public async Task<ActionResult<UserResponse>> GetAiResponseMistral([FromBody] MistralUserQuestion question)
+    {
+        var (answer, thread) = await _mistralUtil.AskQuestion(ctx, question.ThreadId, question.Question);
+        
+        return Ok(new { Answer = answer, ThreadId = thread });
     }
 }

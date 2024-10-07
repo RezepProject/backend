@@ -15,6 +15,7 @@ public class Setting
     public double TalkingSpeed { get; set; }
     public string GreetingMessage { get; set; }
     public bool State { get; set; }
+    public string AiInUse { get; set; }
 }
 
 public class CreateSetting
@@ -25,4 +26,5 @@ public class CreateSetting
     public double TalkingSpeed { get; set; }
     public string GreetingMessage { get; set; }
     public bool State { get; set; }
+    public string AiInUse { get; set; }
 }

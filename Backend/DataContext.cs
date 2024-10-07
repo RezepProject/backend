@@ -163,6 +163,8 @@ public class DataContext : DbContext
             GreetingMessage = "Hello, how can I help you?",
             Language = "en-US",
             TalkingSpeed = 0.7,
+            State = true,
+            AiInUse = "ChatGPT"
         });
         setting
             .Property(s => s.Id)
@@ -184,6 +186,9 @@ public class DataContext : DbContext
             .IsRequired();
         setting
             .Property(s => s.State)
+            .IsRequired();
+        setting
+            .Property(s => s.AiInUse)
             .IsRequired();
     }
 }

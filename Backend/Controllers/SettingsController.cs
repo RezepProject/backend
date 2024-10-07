@@ -35,6 +35,7 @@ public class SettingsController(DataContext ctx) : ControllerBase
         setting.TalkingSpeed = newSetting.TalkingSpeed;
         setting.GreetingMessage = newSetting.GreetingMessage;
         setting.State = newSetting.State;
+        setting.AiInUse = newSetting.AiInUse;
         ctx.Settings.Update(setting);
 
         try
@@ -59,7 +60,8 @@ public class SettingsController(DataContext ctx) : ControllerBase
             Language = setting.Language,
             TalkingSpeed = setting.TalkingSpeed,
             GreetingMessage = setting.GreetingMessage,
-            State = setting.State
+            State = setting.State,
+            AiInUse = setting.AiInUse
         });
         await ctx.SaveChangesAsync();
 
