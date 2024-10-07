@@ -66,7 +66,7 @@ public class MistralUtil
             if (role != null && contentMessage != null)
             {
                 thread.Messages.Add(new Message { role = role, content = contentMessage });
-                return (responseContent, threadId);
+                return (contentMessage, threadId);
             }
         }
 
