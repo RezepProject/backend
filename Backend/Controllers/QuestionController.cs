@@ -12,12 +12,30 @@ namespace backend.Controllers;
 public class QuestionController(DataContext ctx) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Question>>> GetQuestions()
+    public async Task<ActionResult<IEnumerable<object>>> GetQuestions()
     {
-        return await ctx.Questions
+        var questions = await ctx.Questions
             .Include(q => q.Answers)
             .Include(q => q.Categories)
+            .Select(q => new 
+            {
+                q.Id,
+                q.Text,
+                Categories = q.Categories.Select(c =>new
+                {
+                    c.Name,
+                    c.Id
+                }).ToList(),
+                Answers = q.Answers.Select(a => new 
+                {
+                    a.Id,
+                    a.Text,
+                    a.User
+                }).ToList()
+            })
             .ToListAsync();
+
+        return Ok(questions);
     }
 
     [HttpGet("{id:int}")]
@@ -75,16 +93,17 @@ public class QuestionController(DataContext ctx) : ControllerBase
     {
         var questionEntity = await ctx.Questions
             .Include(q => q.Answers)
+            .Include(q => q.Categories)
             .FirstOrDefaultAsync(q => q.Id == id);
 
         if (questionEntity == null) return NotFound("Question id not found!");
 
         questionEntity.Text = question.Text;
 
-        questionEntity.Categories = question.Categories.Select(c => new QuestionCategory()
-        {
-            Name = c.Name
-        }).ToList();
+        var allCategories = await ctx.QuestionCategories.ToListAsync();
+        questionEntity.Categories = allCategories
+            .Where(c => question.Categories.Any(qc => qc.Name == c.Name))
+            .ToList();
 
         if (questionEntity.Answers != null)
         {
@@ -129,5 +148,14 @@ public class QuestionController(DataContext ctx) : ControllerBase
     private bool QuestionExists(int id)
     {
         return ctx.Questions.Any(e => e.Id == id);
+    }
+    
+    [HttpGet("categories")]
+    public async Task<ActionResult<IEnumerable<QuestionCategory>>> GetCategories()
+    {
+        var categories = await ctx.QuestionCategories
+            .ToListAsync();
+
+        return Ok(categories);
     }
 }
