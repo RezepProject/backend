@@ -23,12 +23,12 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}  # Uses the GitHub username
-          password: ${{ secrets.GITHUB_TOKEN }}  # GitHub automatically provides a token for workflows
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: ../Backend/Dockerfile
           push: true
           tags: ghcr.io/rezepproject/backend/rezep-backend:latest
