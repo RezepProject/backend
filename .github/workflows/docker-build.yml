@@ -29,6 +29,6 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: ../Backend/Dockerfile
+          context: ./Backend/Dockerfile
           push: true
           tags: ghcr.io/rezepproject/backend/rezep-backend:latest
