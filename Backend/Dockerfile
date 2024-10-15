@@ -1,6 +1,5 @@
 # Use the ASP.NET runtime image for the base layer
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -11,13 +10,12 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Copy the project file and restore dependencies
-COPY ["Backend.csproj", "./"]  # Assuming the .csproj is directly in Backend
-
-# Restore dependencies
+COPY ["Backend/Backend.csproj", "Backend/"]  # Adjust this line to correctly reference the path
+WORKDIR "/src/Backend"
 RUN dotnet restore "Backend.csproj"
 
 # Copy the rest of the application code
-COPY . .
+COPY Backend/. ./  # Copy everything from the Backend folder
 
 # Build the application
 RUN dotnet build "Backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
