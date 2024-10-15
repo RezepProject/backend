@@ -31,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}/rezep-backend:latest  # Use your repository name
+          tags: ghcr.io/rezepproject/backend/rezep-backend:latest
