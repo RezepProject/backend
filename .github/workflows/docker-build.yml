@@ -27,14 +27,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List files in Backend context
-        run: ls -R Backend  # To check if the files are correctly referenced
+        run: ls -R Backend  # List files to ensure they are correctly referenced
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: Backend
-          file: ./Backend/Dockerfile
+          context: ./Backend  # Ensure context is correct
+          file: ./Backend/Dockerfile  # Path to the Dockerfile
           push: true
-          no-cache: true
           tags: ghcr.io/rezepproject/backend/rezep-backend:latest
-
