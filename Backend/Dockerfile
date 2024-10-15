@@ -1,6 +1,5 @@
 # Use the ASP.NET runtime image for the base layer
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-# Set user for the application (ensure $APP_UID is defined in your build environment)
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
