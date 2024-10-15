@@ -29,7 +29,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: Backend  # Context should point to the directory containing the Dockerfile
-          file: ./Backend/Dockerfile  # Path to the Dockerfile
+          context: Backend  # This is correct if the Dockerfile is in Backend
+          file: ./Backend/Dockerfile  # Ensure this points to your Dockerfile
           push: true
           tags: ghcr.io/rezepproject/backend/rezep-backend:latest
+
