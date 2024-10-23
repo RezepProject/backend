@@ -32,4 +32,5 @@ If the error "Unhandled exception. System.ArgumentException: Host can't be null"
 1. https://minikube.sigs.k8s.io/docs/start/?arch=%2Fwindows%2Fx86-64%2Fstable%2F.exe+download
 2. minikube -p minikube docker-env --shell powershell | Invoke-Expression
 3. docker build -t backend:latest -f Backend/Dockerfile .
+4. kubectl apply -f ./Backend/k8s/app.yaml  
 
