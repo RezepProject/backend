@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>82325624-f926-4292-a6f5-5652e88ef68a</UserSecretsId>
         <RootNamespace>backend</RootNamespace>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -30,6 +31,12 @@
         <PackageReference Include="Org.WebRtc.Callstats" Version="1.0.1-Alpha"/>
         <PackageReference Include="Socket.Io.Client.Core" Version="1.2.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>
