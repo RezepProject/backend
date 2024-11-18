@@ -1,22 +1,9 @@
-﻿# postgres.yaml
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rezep-database
+  labels:
+    app: rezep-database
 spec:
   replicas: 1
   selector:
@@ -32,7 +19,7 @@ spec:
           image: postgres:latest
           env:
             - name: POSTGRES_PASSWORD
-              value: "postgres"  # Passwort für den Zugriff
+              value: "postgres"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -42,12 +29,11 @@ spec:
         - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: rezep-database
+  name: postgres-service
 spec:
   type: ClusterIP
   selector:
