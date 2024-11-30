@@ -23,6 +23,7 @@ public class DataContext : DbContext
     public DbSet<ConfigUserToken> ConfigUserTokens { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Setting> Settings { get; set; }
+    public DbSet<BackgroundImage> BackgroundImages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +33,7 @@ public class DataContext : DbContext
         modelBuilder.UseSerialColumns();
         base.OnModelCreating(modelBuilder);
 
+        CreateBackgroundImage(modelBuilder);
         CreateConfigUser(modelBuilder);
         CreateRole(modelBuilder);
         CreateConfig(modelBuilder);
@@ -41,6 +43,17 @@ public class DataContext : DbContext
         CreateConfigUserToken(modelBuilder);
         CreateRefreshToken(modelBuilder);
         CreateSetting(modelBuilder);
+    }
+    
+    private static void CreateBackgroundImage(ModelBuilder modelBuilder)
+    {
+        var backgroundImage = modelBuilder.Entity<BackgroundImage>();
+        backgroundImage
+            .Property(bi => bi.Id)
+            .UseIdentityColumn();
+        backgroundImage
+            .Property(bi => bi.Base64Image)
+            .IsRequired();
     }
 
     private static void CreateConfigUser(ModelBuilder modelBuilder)
