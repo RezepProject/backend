@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using dotenv.net;
 namespace backend;
 
 public static class Program
@@ -17,12 +17,23 @@ public static class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.Configuration.AddEnvironmentVariables();
         config = builder.Configuration;
-
         
-        Console.WriteLine(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"));
         Console.WriteLine(Program.config["OpenAi:Key"]);
         Console.WriteLine(Environment.GetEnvironmentVariable("OPENAI_KEY"));
-
+        Console.WriteLine($"Connection String: {builder.Configuration.GetConnectionString("DefaultConnection")}");
+        
+        var mailHost = Environment.GetEnvironmentVariable("MAIL_HOST");
+        var mailPort = Environment.GetEnvironmentVariable("MAIL_PORT");
+        var mailAddress = Environment.GetEnvironmentVariable("MAIL_ADDRESS");
+        var mailKey = Environment.GetEnvironmentVariable("MAIL_KEY");
+        
+        mailHost = config["Mail:Host"];
+        
+        Console.WriteLine($"Mail Host: {mailHost}");
+        Console.WriteLine($"Mail Port: {mailPort}");
+        Console.WriteLine($"Mail Address: {mailAddress}");
+        Console.WriteLine($"Mail Key: {mailKey}");
+        
         builder.Services.AddDbContext<DataContext>(options
             => options
                 .UseNpgsql(config["DB_CONNECTION_STRING"])

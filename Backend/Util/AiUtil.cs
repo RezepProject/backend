@@ -64,7 +64,12 @@ public class AiUtil
         var response = await _httpClient.PostAsync("https://api.openai.com/v1/assistants", content);
         var responseContent = await response.Content.ReadAsStringAsync();
 
-        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+        var result = JsonConvert.DeserializeObject<JObject>(responseContent);
+        if (result == null || result["id"] == null)
+        {
+            throw new Exception("Failed to create assistant. Response: " + responseContent);
+        }
+
         _assistantId = result["id"]!.ToString();
 
         // create thread
