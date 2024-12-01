@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: herbert-backend
-          image: backend:latest
+          image: jp0606/herbert-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
