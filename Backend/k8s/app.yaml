@@ -23,7 +23,7 @@ spec:
               protocol: TCP
           env:
             - name: DB_CONNECTION_STRING
-              value: "Host=postgres-service.default.svc.cluster.local;Port=5432;Database=rezep-database;Username=postgres;Password=postgres"
+              value: "Host=postgres-service.default.svc.cluster.local;Port=5432;Database=herbert-database;Username=postgres;Password=postgres"
 ---
 apiVersion: v1
 kind: Service
