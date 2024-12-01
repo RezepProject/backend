@@ -1,18 +1,18 @@
 ﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rezep-database
+  name: herbert-database
   labels:
-    app: rezep-database
+    app: herbert-database
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rezep-database
+      app: herbert-database
   template:
     metadata:
       labels:
-        app: rezep-database
+        app: herbert-database
     spec:
       containers:
         - name: postgres
@@ -37,7 +37,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: rezep-database
+    app: herbert-database
   ports:
     - protocol: TCP
       port: 5432
