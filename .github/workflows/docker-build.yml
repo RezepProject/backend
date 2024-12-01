@@ -17,22 +17,22 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '7.x' # Adjust to your project's .NET version
+        dotnet-version: '8.x'
 
     - name: Restore Dependencies
-      working-directory: Dockerized/Hello
+      working-directory: Backend
       run: dotnet restore
 
     - name: Build Project
-      working-directory: Dockerized/Hello
+      working-directory: Backend
       run: dotnet build --configuration Release --no-restore
 
     - name: Publish Project
-      working-directory: Dockerized/Hello
+      working-directory: Backend
       run: dotnet publish --configuration Release --no-build --output ./publish
 
     - name: Build Docker Image
-      working-directory: Dockerized/Hello
+      working-directory: .
       run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/herbert-backend:latest
 
     - name: Log into Docker Hub
