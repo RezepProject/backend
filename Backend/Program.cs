@@ -20,6 +20,7 @@ public static class Program
 
         
         Console.WriteLine(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"));
+        Console.WriteLine(Program.config["OpenAi:Key"]);
 
         builder.Services.AddDbContext<DataContext>(options
             => options
