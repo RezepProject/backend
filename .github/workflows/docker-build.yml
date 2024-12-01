@@ -1,38 +1,39 @@
-name: Build and Push Docker Image
+name: Backend Deployment to Dockerhub
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
     branches:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    
+    - name: Build the Docker image
+      working-directory: Dockerized/Hello
+      run: docker build . -t docker-hub-username/container-name:latest
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+    - name: Log into Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Push the image to Docker Hub
+      run: docker push docker-hub-username/container-name
 
-      - name: List files in Backend context
-        run: ls -R Backend  # List files to ensure they are correctly referenced
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: ./Backend  # Ensure context is correct
-          file: ./Backend/Dockerfile  # Path to the Dockerfile
-          push: true
-          tags: ghcr.io/rezepproject/backend/rezep-backend:latest
+    - name: Pull the image to VM
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: 
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/hello:latest
+          docker stop hello || true
+          docker rm hello || true
+          docker run -d -p 80:80 --name hello ${{ secrets.DOCKERHUB_USERNAME }}/hello:latest
