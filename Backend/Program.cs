@@ -18,9 +18,12 @@ public static class Program
 
         config = builder.Configuration;
 
+        
+        Console.WriteLine(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"));
+
         builder.Services.AddDbContext<DataContext>(options
             => options
-                .UseNpgsql(builder.Configuration["ConnectionString"])
+                .UseNpgsql(config["DB_CONNECTION_STRING"])
                 .UseSnakeCaseNamingConvention());
 
         builder.Configuration.AddJsonFile("secrets.json",
