@@ -15,12 +15,13 @@ public static class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
+        builder.Configuration.AddEnvironmentVariables();
         config = builder.Configuration;
 
         
         Console.WriteLine(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"));
         Console.WriteLine(Program.config["OpenAi:Key"]);
+        Console.WriteLine(Environment.GetEnvironmentVariable("OPENAI_KEY"));
 
         builder.Services.AddDbContext<DataContext>(options
             => options
