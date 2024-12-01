@@ -107,7 +107,7 @@ public class MistralUtil
         {
             var role = message["role"]?.ToString();
             var contentMessage = message["content"]?.ToString();
-            var categories = contentMessage?.Split(";");
+            var categories = contentMessage?.Replace("<", "").Replace(">", "").Split(";");
             if (role != null && contentMessage != null)
             {
                 return _categories
@@ -136,9 +136,13 @@ public class MistralUtil
             _categories = tmpCategories;
         }
 
-        if (_categories.Count == 0)
+        if (_categories.Count > 0)
         {
-            var tmpQuestions = await ctx.Questions.ToListAsync();
+            var tmpQuestions = await ctx.Questions
+                .Include(q => q.Categories)
+                .Include(q => q.Answers)
+                .ToListAsync();
+            
             if (tmpQuestions.Count > 0)
             {
                 List<QuestionCategory> categories = (await ClassifyQuestion(question));
