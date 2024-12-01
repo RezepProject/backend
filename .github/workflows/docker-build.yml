@@ -1,38 +1,45 @@
-name: Build and Push Docker Image
+name: Build and Deploy C# Project to Docker Hub
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
     branches:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.x' # Adjust to your project's .NET version
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Restore Dependencies
+      working-directory: Dockerized/Hello
+      run: dotnet restore
 
-      - name: List files in Backend context
-        run: ls -R Backend  # List files to ensure they are correctly referenced
+    - name: Build Project
+      working-directory: Dockerized/Hello
+      run: dotnet build --configuration Release --no-restore
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: ./Backend  # Ensure context is correct
-          file: ./Backend/Dockerfile  # Path to the Dockerfile
-          push: true
-          tags: ghcr.io/rezepproject/backend/rezep-backend:latest
+    - name: Publish Project
+      working-directory: Dockerized/Hello
+      run: dotnet publish --configuration Release --no-build --output ./publish
+
+    - name: Build Docker Image
+      working-directory: Dockerized/Hello
+      run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/herbert-backend:latest
+
+    - name: Log into Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Push Docker Image
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/herbert-backend:latest
