@@ -2,6 +2,7 @@
 kind: Deployment
 metadata:
   name: herbert-backend
+  namespace: student-if200113
   labels:
     app: herbert-backend
 spec:
@@ -23,18 +24,64 @@ spec:
               protocol: TCP
           env:
             - name: DB_CONNECTION_STRING
-              value: "Host=postgres-service.student-if200113.svc.cluster.local;Port=5432;Database=herbert-database;Username=postgres;Password=postgres" # TODO: Change namespace
+              value: "Host=postgres-service.student-if200113.svc.cluster.local;Port=5432;Database=herbert-database;Username=postgres;Password=postgres"
             - name: Logging__LogLevel__Default
               value: "Information"
             - name: Logging__LogLevel__Microsoft.AspNetCore
               value: "Warning"
             - name: AllowedHosts
               value: "*"
+            - name: MAIL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_HOST
+            - name: MAIL_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_PORT
+            - name: MAIL_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_ADDRESS
+            - name: MAIL_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MAIL_KEY
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_KEY
+            - name: JWT_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_ISSUER
+            - name: JWT_AUDIENCE
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_AUDIENCE
+            - name: OPENAI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: OPENAI_KEY
+            - name: MISTRALAI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MISTRALAI_KEY
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: herbert-backend-service
+  namespace: student-if200113
 spec:
   type: NodePort
   selector:
@@ -42,5 +89,5 @@ spec:
   ports:
     - protocol: TCP
       port: 8080
-      targetPort: 8080
+      targetPort: 80
       nodePort: 30001
