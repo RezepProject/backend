@@ -17,7 +17,7 @@ spec:
       containers:
         - name: herbert-backend
           image: backend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
               protocol: TCP
