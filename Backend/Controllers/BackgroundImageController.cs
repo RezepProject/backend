@@ -27,7 +27,7 @@ public class BackgroundImageController(DataContext ctx) : ControllerBase
         ctx.BackgroundImages.Add(backgroundImage);
         await ctx.SaveChangesAsync();
 
-        return CreatedAtAction("GetBackgroundImage", new { id = backgroundImage.Id }, backgroundImage);
+        return CreatedAtAction("GetBackgroundImages", new { id = backgroundImage.Id }, backgroundImage);
     }
     
     [HttpDelete("{id:int}")]
