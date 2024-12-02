@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 public class SecretsProvider
 {
-    private static readonly Lazy<SecretsProvider> _instance = 
+    private static readonly Lazy<SecretsProvider> _instance =
         new Lazy<SecretsProvider>(() => new SecretsProvider());
 
     public static SecretsProvider Instance => _instance.Value;
@@ -12,15 +12,20 @@ public class SecretsProvider
     private readonly IConfiguration _configuration;
 
     // Secrets als Properties
-    public string MailHost => _configuration["Mail:Host"];
-    public int MailPort => int.TryParse(_configuration["Mail:Port"], out var port) ? port : 0;
-    public string MailAddress => _configuration["Mail:Address"];
-    public string MailKey => _configuration["Mail:Key"];
-    public string JwtKey => _configuration["Jwt:Key"];
-    public string JwtIssuer => _configuration["Jwt:Issuer"];
-    public string JwtAudience => _configuration["Jwt:Audience"];
-    public string OpenAiKey => _configuration["OpenAi:Key"];
-    public string MistralAiKey => _configuration["MistralAi:Key"];
+    public string MailHost => _configuration["Mail:Host"] ?? Environment.GetEnvironmentVariable("MAIL_HOST");
+
+    public int MailPort => int.TryParse(_configuration["Mail:Port"], out var port) ? port :
+        int.TryParse(Environment.GetEnvironmentVariable("MAIL_PORT"), out var envPort) ? envPort : 0;
+
+    public string MailAddress => _configuration["Mail:Address"] ?? Environment.GetEnvironmentVariable("MAIL_ADDRESS");
+    public string MailKey => _configuration["Mail:Key"] ?? Environment.GetEnvironmentVariable("MAIL_KEY");
+    public string JwtKey => _configuration["Jwt:Key"] ?? Environment.GetEnvironmentVariable("JWT_KEY");
+    public string JwtIssuer => _configuration["Jwt:Issuer"] ?? Environment.GetEnvironmentVariable("JWT_ISSUER");
+    public string JwtAudience => _configuration["Jwt:Audience"] ?? Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+    public string OpenAiKey => _configuration["OpenAi:Key"] ?? Environment.GetEnvironmentVariable("OPENAI_KEY");
+
+    public string MistralAiKey =>
+        _configuration["MistralAi:Key"] ?? Environment.GetEnvironmentVariable("MISTRALAI_KEY");
 
     private SecretsProvider()
     {
@@ -36,7 +41,7 @@ public class SecretsProvider
         }
 
         _configuration = builder.Build();
-        
+
         // Secrets anzeigen
         Console.WriteLine($"Mail Host: {MailHost}");
         Console.WriteLine($"Mail Port: {MailPort}");
@@ -47,20 +52,5 @@ public class SecretsProvider
         Console.WriteLine($"JWT Audience: {JwtAudience}");
         Console.WriteLine($"OpenAI Key: {OpenAiKey}");
         Console.WriteLine($"MistralAI Key: {MistralAiKey}");
-
-        Console.WriteLine();
-        Console.WriteLine();
-        Console.WriteLine();
-        
-        // Access MIt Environment
-        Console.WriteLine($"MAIL_HOST: {Environment.GetEnvironmentVariable("MAIL_HOST")}");
-        Console.WriteLine($"MAIL_PORT: {Environment.GetEnvironmentVariable("MAIL_PORT")}");
-        Console.WriteLine($"MAIL_ADDRESS: {Environment.GetEnvironmentVariable("MAIL_ADDRESS")}");
-        Console.WriteLine($"MAIL_KEY: {Environment.GetEnvironmentVariable("MAIL_KEY")}");
-        Console.WriteLine($"JWT_KEY: {Environment.GetEnvironmentVariable("JWT_KEY")}");
-        Console.WriteLine($"JWT_ISSUER: {Environment.GetEnvironmentVariable("JWT_ISSUER")}");
-        Console.WriteLine($"JWT_AUDIENCE: {Environment.GetEnvironmentVariable("JWT_AUDIENCE")}");
-        Console.WriteLine($"OPENAI_KEY: {Environment.GetEnvironmentVariable("OPENAI_KEY")}");
-        Console.WriteLine($"MISTRALAI_KEY: {Environment.GetEnvironmentVariable("MISTRALAI_KEY")}");
     }
 }
