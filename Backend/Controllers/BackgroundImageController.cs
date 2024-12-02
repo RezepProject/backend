@@ -14,7 +14,16 @@ public class BackgroundImageController(DataContext ctx) : ControllerBase
     public async Task<ActionResult<IEnumerable<BackgroundImage>>> GetBackgroundImages()
     {
         return await ctx.BackgroundImages.ToListAsync();
+    }    
+    
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<BackgroundImage>> GetBackgroundImages(int id)
+    {
+        var img = await ctx.BackgroundImages.FindAsync(id);
+        return img == null ? NotFound("Image id not found!") : img;
     }
+    
+    
     
     [HttpPost]
     public async Task<ActionResult<BackgroundImage>> AddBackgroundImage(CreateBackgroundImage bi)
