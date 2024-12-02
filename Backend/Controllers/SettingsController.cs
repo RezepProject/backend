@@ -30,7 +30,7 @@ public class SettingsController(DataContext ctx) : ControllerBase
         if (setting == null) return NotFound("Setting id not found!");
 
         setting.Name = newSetting.Name;
-        setting.BackgroundImage = newSetting.BackgroundImage;
+        setting.BackgroundImageId = newSetting.BackgroundImageId;
         setting.Language = newSetting.Language;
         setting.TalkingSpeed = newSetting.TalkingSpeed;
         setting.GreetingMessage = newSetting.GreetingMessage;
@@ -56,7 +56,7 @@ public class SettingsController(DataContext ctx) : ControllerBase
         var newSetting = ctx.Settings.Add(new Setting
         {
             Name = setting.Name,
-            BackgroundImage = setting.BackgroundImage,
+            BackgroundImageId = setting.BackgroundImageId,
             Language = setting.Language,
             TalkingSpeed = setting.TalkingSpeed,
             GreetingMessage = setting.GreetingMessage,
