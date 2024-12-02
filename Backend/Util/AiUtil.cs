@@ -29,7 +29,7 @@ public class AiUtil
     private AiUtil()
     {
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("OPENAI_KEY") ?? string.Empty);
+            new AuthenticationHeaderValue("Bearer", SecretsProvider.Instance.OpenAiKey ?? string.Empty);
         _httpClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 

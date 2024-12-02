@@ -10,7 +10,7 @@ public static class AuthenticationUtils
 {
     public static string GenerateJwtToken(Login login, int userId, int roleId)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("Jwt:Key") + ""));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey + ""));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
         var claims = new[]
         {
@@ -23,8 +23,8 @@ public static class AuthenticationUtils
         var timeout = 15;
         if (Program.devMode) timeout = 4 * 60;
 
-        var token = new JwtSecurityToken(Environment.GetEnvironmentVariable("Jwt:Issuer"),
-            Environment.GetEnvironmentVariable("Jwt:Audience"),
+        var token = new JwtSecurityToken(SecretsProvider.Instance.JwtIssuer,
+            SecretsProvider.Instance.JwtAudience,
             claims,
             expires: DateTime.UtcNow.AddMinutes(timeout),
             signingCredentials: credentials);

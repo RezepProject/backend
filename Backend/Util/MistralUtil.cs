@@ -10,7 +10,7 @@ namespace backend.Util;
 public class MistralUtil
 {
     private static readonly List<MistralThread> Threads = new();
-    private static readonly string Key = Environment.GetEnvironmentVariable("MistralAi:Key") ?? string.Empty;
+    private static readonly string Key = SecretsProvider.Instance.MistralAiKey;
     private static readonly HttpClient HttpClient = new();
     private List<QuestionCategory> _categories = new();
 
