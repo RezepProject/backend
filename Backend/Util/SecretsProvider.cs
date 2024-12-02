@@ -47,5 +47,20 @@ public class SecretsProvider
         Console.WriteLine($"JWT Audience: {JwtAudience}");
         Console.WriteLine($"OpenAI Key: {OpenAiKey}");
         Console.WriteLine($"MistralAI Key: {MistralAiKey}");
+
+        Console.WriteLine();
+        Console.WriteLine();
+        Console.WriteLine();
+        
+        // Access MIt Environment
+        Console.WriteLine($"MAIL_HOST: {Environment.GetEnvironmentVariable("MAIL_HOST")}");
+        Console.WriteLine($"MAIL_PORT: {Environment.GetEnvironmentVariable("MAIL_PORT")}");
+        Console.WriteLine($"MAIL_ADDRESS: {Environment.GetEnvironmentVariable("MAIL_ADDRESS")}");
+        Console.WriteLine($"MAIL_KEY: {Environment.GetEnvironmentVariable("MAIL_KEY")}");
+        Console.WriteLine($"JWT_KEY: {Environment.GetEnvironmentVariable("JWT_KEY")}");
+        Console.WriteLine($"JWT_ISSUER: {Environment.GetEnvironmentVariable("JWT_ISSUER")}");
+        Console.WriteLine($"JWT_AUDIENCE: {Environment.GetEnvironmentVariable("JWT_AUDIENCE")}");
+        Console.WriteLine($"OPENAI_KEY: {Environment.GetEnvironmentVariable("OPENAI_KEY")}");
+        Console.WriteLine($"MISTRALAI_KEY: {Environment.GetEnvironmentVariable("MISTRALAI_KEY")}");
     }
 }
