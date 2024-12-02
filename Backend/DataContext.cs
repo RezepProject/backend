@@ -173,6 +173,7 @@ public class DataContext : DbContext
             Id = 1,
             Name = "Rezep-1",
             BackgroundImage = "https://example.com/image.jpg",
+            BackgroundImageId = 1,
             GreetingMessage = "Hello, how can I help you?",
             Language = "en-US",
             TalkingSpeed = 0.7,
@@ -187,6 +188,9 @@ public class DataContext : DbContext
             .IsRequired();
         setting
             .Property(s => s.BackgroundImage)
+            .IsRequired();
+        setting
+            .Property(s => s.BackgroundImageId)
             .IsRequired();
         setting
             .Property(s => s.Language)
