@@ -20,7 +20,7 @@ spec:
           image: jp0606/herbert-backend:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               protocol: TCP
           env:
             - name: DB_CONNECTION_STRING
@@ -89,5 +89,7 @@ spec:
   ports:
     - protocol: TCP
       port: 8080
-      targetPort: 80
+      targetPort: 8080
       nodePort: 30001
+---
+

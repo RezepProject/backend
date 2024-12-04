@@ -4,8 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 public class SecretsProvider
 {
-    private static readonly Lazy<SecretsProvider> _instance =
-        new Lazy<SecretsProvider>(() => new SecretsProvider());
+    private static readonly Lazy<SecretsProvider> _instance = new(() => new SecretsProvider());
 
     public static SecretsProvider Instance => _instance.Value;
 

@@ -1,4 +1,15 @@
-﻿apiVersion: apps/v1
+﻿apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: herbert-database
@@ -14,13 +25,7 @@ spec:
       labels:
         app: herbert-database
     spec:
-      initContainers:
-        - name: init-postgres
-          image: busybox
-          command: ['sh', '-c', 'rm -rf /var/lib/postgresql/data/*']
-          volumeMounts:
-            - mountPath: /var/lib/postgresql/data
-              name: postgres-storage
+
       containers:
         - name: postgres
           image: postgres:latest
