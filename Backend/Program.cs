@@ -67,9 +67,9 @@ public static class Program
                     ValidateAudience         = true,
                     ValidateLifetime         = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer              = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience            = builder.Configuration["Jwt:Issuer"],
-                    IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                    ValidIssuer              = SecretsProvider.Instance.JwtIssuer,
+                    ValidAudience            = SecretsProvider.Instance.JwtAudience,
+                    IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey))
                 };
             });
 

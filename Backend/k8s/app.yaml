@@ -83,13 +83,10 @@ metadata:
   name: herbert-backend-service
   namespace: student-if200113
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: herbert-backend
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30001
----
-
