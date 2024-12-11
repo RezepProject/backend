@@ -80,11 +80,11 @@ public static class Program
 
         var app = builder.Build();
 
-        using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+        /*using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
         {
             await using var context = scope.ServiceProvider.GetRequiredService<DataContext>();
             await context.Database.MigrateAsync();
-        }
+        }*/
 
         // TODO: change before production
         app.UseCors(b => b
@@ -97,9 +97,9 @@ public static class Program
         if (app.Environment.IsDevelopment())
         {
             devMode = true;
-            app.UseSwagger();
-            app.UseSwaggerUI();
         }
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
         app.UseHttpsRedirection();
 
