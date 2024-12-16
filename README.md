@@ -6,6 +6,7 @@
 2. run `docker pull postgres`
 3. run `docker run --name herbert-database -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres`
 4. confirm that the container is running by using the command `docker ps`
+5. Connect with IDE Connection String: `jdbc:postgresql://localhost:5432/postgres?user=postgres&password=postgres`
 
 ### Test-User Setup
 
