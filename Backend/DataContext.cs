@@ -23,6 +23,7 @@ public class DataContext : DbContext
     public DbSet<ConfigUserToken> ConfigUserTokens { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Setting> Settings { get; set; }
+    public DbSet<BackgroundImage> BackgroundImages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +33,7 @@ public class DataContext : DbContext
         modelBuilder.UseSerialColumns();
         base.OnModelCreating(modelBuilder);
 
+        CreateBackgroundImage(modelBuilder);
         CreateConfigUser(modelBuilder);
         CreateRole(modelBuilder);
         CreateConfig(modelBuilder);
@@ -41,6 +43,17 @@ public class DataContext : DbContext
         CreateConfigUserToken(modelBuilder);
         CreateRefreshToken(modelBuilder);
         CreateSetting(modelBuilder);
+    }
+    
+    private static void CreateBackgroundImage(ModelBuilder modelBuilder)
+    {
+        var backgroundImage = modelBuilder.Entity<BackgroundImage>();
+        backgroundImage
+            .Property(bi => bi.Id)
+            .UseIdentityColumn();
+        backgroundImage
+            .Property(bi => bi.Base64Image)
+            .IsRequired();
     }
 
     private static void CreateConfigUser(ModelBuilder modelBuilder)
@@ -160,6 +173,7 @@ public class DataContext : DbContext
             Id = 1,
             Name = "Rezep-1",
             BackgroundImage = "https://example.com/image.jpg",
+            BackgroundImageId = 1,
             GreetingMessage = "Hello, how can I help you?",
             Language = "en-US",
             TalkingSpeed = 0.7,
@@ -174,6 +188,9 @@ public class DataContext : DbContext
             .IsRequired();
         setting
             .Property(s => s.BackgroundImage)
+            .IsRequired();
+        setting
+            .Property(s => s.BackgroundImageId)
             .IsRequired();
         setting
             .Property(s => s.Language)

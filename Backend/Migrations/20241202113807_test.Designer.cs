@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend;
@@ -11,9 +12,11 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20241202113807_test")]
+    partial class test
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -315,10 +318,6 @@ namespace backend.Migrations
                         .HasColumnType("text")
                         .HasColumnName("background_image");
 
-                    b.Property<int>("BackgroundImageId")
-                        .HasColumnType("integer")
-                        .HasColumnName("background_image_id");
-
                     b.Property<int>("ConfigUser")
                         .HasColumnType("integer")
                         .HasColumnName("config_user");
@@ -361,7 +360,6 @@ namespace backend.Migrations
                             Id = 1,
                             AiInUse = "ChatGPT",
                             BackgroundImage = "https://example.com/image.jpg",
-                            BackgroundImageId = 1,
                             ConfigUser = 0,
                             ConfigUserId = 0,
                             GreetingMessage = "Hello, how can I help you?",
