@@ -1,0 +1,15 @@
+﻿apiVersion: batch/v1
+kind: Job
+metadata:
+  name: insert-initial-data
+spec:
+  template:
+    spec:
+      containers:
+        - name: insert-data
+          image: postgres:latest
+          env:
+            - name: PGPASSWORD
+              value: "postgres"  # Muss zum PostgreSQL Passwort passen
+          command: ["sh", "-c", "psql -h herbert-database -U postgres -d herbert-database -c \"insert into role values (1, 'ADMIN'); insert into configuser (first_name, last_name, email, password, role_id, refresh_token, token_created, token_expires) values ('test', 'test', 'test', '$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2', 1, 'refresh_token_value', current_timestamp, current_timestamp + interval '7 days');\""]
+      restartPolicy: Never

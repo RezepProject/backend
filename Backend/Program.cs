@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using dotenv.net;
 namespace backend;
 
 public static class Program
@@ -15,17 +15,13 @@ public static class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
+        builder.Configuration.AddEnvironmentVariables();
         config = builder.Configuration;
-
+        
         builder.Services.AddDbContext<DataContext>(options
             => options
-                .UseNpgsql(builder.Configuration["ConnectionString"])
+                .UseNpgsql(config["DB_CONNECTION_STRING"])
                 .UseSnakeCaseNamingConvention());
-
-        builder.Configuration.AddJsonFile("secrets.json",
-            optional: true,
-            reloadOnChange: true);
 
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -71,9 +67,9 @@ public static class Program
                     ValidateAudience         = true,
                     ValidateLifetime         = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer              = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience            = builder.Configuration["Jwt:Issuer"],
-                    IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                    ValidIssuer              = SecretsProvider.Instance.JwtIssuer,
+                    ValidAudience            = SecretsProvider.Instance.JwtAudience,
+                    IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey))
                 };
             });
 
@@ -84,11 +80,11 @@ public static class Program
 
         var app = builder.Build();
 
-        using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+        /*using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
         {
             await using var context = scope.ServiceProvider.GetRequiredService<DataContext>();
             await context.Database.MigrateAsync();
-        }
+        }*/
 
         // TODO: change before production
         app.UseCors(b => b
@@ -101,9 +97,9 @@ public static class Program
         if (app.Environment.IsDevelopment())
         {
             devMode = true;
-            app.UseSwagger();
-            app.UseSwaggerUI();
         }
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
         app.UseHttpsRedirection();
 

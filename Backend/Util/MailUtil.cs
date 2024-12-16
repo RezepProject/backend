@@ -15,17 +15,17 @@ public static class MailUtil
     {
         try
         {
-            var smtpClient = new SmtpClient(Program.config["Mail:Host"],
-                int.Parse(Program.config["Mail:Port"] ?? string.Empty));
+            var smtpClient = new SmtpClient(SecretsProvider.Instance.MailHost,
+                SecretsProvider.Instance.MailPort);
 
             // set smtp-client with basicAuthentication
             smtpClient.UseDefaultCredentials = false;
             smtpClient.EnableSsl = true;
             smtpClient.Credentials =
-                new NetworkCredential(Program.config["Mail:Address"], Program.config["Mail:Key"]);
+                new NetworkCredential(SecretsProvider.Instance.MailAddress, SecretsProvider.Instance.MailKey);
 
             // add from / to mail addresses
-            var from = new MailAddress(Program.config["Mail:Address"] ?? string.Empty, "Rezep");
+            var from = new MailAddress(SecretsProvider.Instance.MailAddress, "Rezep");
             // MailAddress to = new MailAddress("test2@example.com", "TestToName");
             var mail = new MailMessage(from, to);
 

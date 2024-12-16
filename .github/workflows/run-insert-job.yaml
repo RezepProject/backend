@@ -1,0 +1,32 @@
+name: Run Insert Job in Kubernetes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  start-postgres:
+    name: Run insert job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Authenticate with Kubernetes cluster
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: |
+          echo "$KUBECONFIG" > ~/.kube/config
+
+      - name: Apply insert job configuration
+        run: |
+          kubectl apply -f ./Backend/k8s/insert-job.yaml
+
+      - name: Verify Pod status
+        run: |
+          kubectl get pods --selector=app=postgres
