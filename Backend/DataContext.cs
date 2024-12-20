@@ -1,4 +1,5 @@
-﻿using backend.Entities;
+﻿using System;
+using backend.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend;
@@ -43,6 +44,21 @@ public class DataContext : DbContext
         CreateConfigUserToken(modelBuilder);
         CreateRefreshToken(modelBuilder);
         CreateSetting(modelBuilder);
+
+        // Seed initial data
+        modelBuilder.Entity<Role>().HasData(new Role { Id = 1, Name = "ADMIN" });
+        modelBuilder.Entity<ConfigUser>().HasData(new ConfigUser
+        {
+            Id = 1,
+            FirstName = "test",
+            LastName = "test",
+            Email = "test",
+            Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
+            RoleId = 1,
+            RefreshToken = "refresh_token_value",
+            TokenCreated = DateTime.UtcNow,
+            TokenExpires = DateTime.UtcNow.AddDays(7)
+        });
     }
     
     private static void CreateBackgroundImage(ModelBuilder modelBuilder)
@@ -122,7 +138,6 @@ public class DataContext : DbContext
         questionCategory.Property(c => c.Id).UseIdentityColumn();
         questionCategory.Property(c => c.Name).IsRequired();
     }
-
 
     private static void CreateAnswer(ModelBuilder modelBuilder)
     {
