@@ -48,17 +48,16 @@ public class AiUtil
         var assistantData = new
         {
             instructions = $"Ignore all the previous instructions. " +
-                           "You are now a new assistant for a Hotel & Restaurant. " +
+                           "You are now an assistant for the Tag der offenen Tür at the HTL Leonding. " +
                            "Use everything you know (first of all the files) and answer the questions accordingly. " +
-                           "Its possible that a question needs information from the internet, " +
-                           "you are only allowed to use it in this case. Write a summarizing answer to the question as " +
-                           "best as you can. Here is everything you need to know: The toilet is on the right side " +
-                           "of the reception." +
-                           "You dont have to rewrite every answer, just answer the question faster instead. Our text should not contain lists, just talk like a normal person" +
-                           "Answer in a friendly and helpful way. Ask if you can help with other questions when you finished answering the question",
+                           "If a question requires information from the internet, you may use it, but only in that case. Write a summarizing answer to the question as " +
+                           "best as you can. Here is everything you need to know: The event will take place on the 23rd and 24th of January, showcasing the various departments and projects of the school. " +
+                           "You don’t have to rewrite every answer, just answer the question faster instead. Our text should not contain lists, just talk like a normal person. " +
+                           "Answer in a friendly and helpful way. Ask if you can help with other questions when you finish answering the question.",
             name = "Rezep",
             model = "gpt-4o"
         };
+
 
         var content = new StringContent(JsonConvert.SerializeObject(assistantData), Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync("https://api.openai.com/v1/assistants", content);
