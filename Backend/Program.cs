@@ -110,3 +110,13 @@ public static class Program
         await app.RunAsync();
     }
 }
+
+/*
+ 
+{
+  "question": "Wheres the gym??",
+  "sessionId": "",
+  "language": "en"
+}
+
+*/

@@ -141,67 +141,101 @@ public class AiUtil
         var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
         return result["id"]!.ToString();
     }
-
-    // returns questionId, threadId
+    
+    
     public async Task<(string, string)> AskQuestion(DataContext ctx, string? threadId, string question,
-        string language, bool isClassification = false)
+    string language, bool isClassification = false)
+{
+    _ctx = ctx;
+
+    if (isClassification)
     {
-        _ctx = ctx;
-
-        if (!isClassification)
+        var categories = await _ctx.QuestionCategories.Select(c => c.Name).ToListAsync();
+        if (!categories.Any())
         {
-            await UpdateThreads();
-            if (string.IsNullOrEmpty(threadId) || _threads.Where(t => t.ThreadId == threadId) != null)
-            {
-                threadId = await GetThread();
-                _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
-            }
-            else
-            {
-                _threads.FirstOrDefault(t => t.ThreadId == threadId)!.Time = DateTime.Now;
-            }
-
-            var tmpCategories = await _ctx.QuestionCategories.ToListAsync();
-            if (tmpCategories.Count != _categories.Count)
-            {
-                _categories = tmpCategories;
-                await DeleteThread(_classifyAssistantThreadId);
-                _classifyAssistantThreadId = "";
-            }
-
-            if (_categories.Count == 0)
-            {
-                var tmpQuestions = await _ctx.Questions.ToListAsync();
-                if (tmpQuestions.Count > 0)
-                {
-                    string[] categories = (await ClassifyQuestion(question)).Split(";");
-                    tmpQuestions.Where(q => categories.Any(c => q.Categories.Any(c2 => c2.Name == c)));
-
-                    question = "Use this information: " + tmpQuestions.Select(q => q.Text)
-                                                            .Aggregate((a, b) => a + " " + b)
-                                                        + " to answer the question: " + question;
-                }
-            }
+            throw new InvalidOperationException("No categories available for classification.");
         }
 
-        var messageData = new
+        string formattedCategories = string.Join(", ", categories);
+        question = $"Classify the following question into one of these categories: {formattedCategories}. The question is: '{question}'. Only reply with the exact category name from the list, nothing else.";
+
+        var classificationData = new
         {
             role = "user",
-            content = $"{question}. Use ISO 639-1 standard language code {language} for your answer.",
-            // file_ids = files,
+            content = $"{question}. Use ISO 639-1 standard language code {language} for your answer."
         };
 
-        var content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8, "application/json");
+        var content = new StringContent(JsonConvert.SerializeObject(classificationData), Encoding.UTF8,
+            "application/json");
         var response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/messages", content);
         var responseContent = await response.Content.ReadAsStringAsync();
 
         var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
 
-        var runData = new
+        var runData = new { assistant_id = _classifyAssistantId };
+        content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
+        response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/runs", content);
+        responseContent = await response.Content.ReadAsStringAsync();
+
+        result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+
+        return (result["id"]!.ToString(), threadId ?? "");
+    }
+    else
+    {
+        await UpdateThreads();
+        if (string.IsNullOrEmpty(threadId) || _threads.All(t => t.ThreadId != threadId))
         {
-            assistant_id = isClassification ? _classifyAssistantId : _assistantId
+            threadId = await GetThread();
+            _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
+        }
+        else
+        {
+            _threads.First(t => t.ThreadId == threadId).Time = DateTime.Now;
+        }
+
+        var tmpCategories = await _ctx.QuestionCategories.ToListAsync();
+        if (tmpCategories.Count != _categories.Count)
+        {
+            _categories = tmpCategories;
+            await DeleteThread(_classifyAssistantThreadId);
+            _classifyAssistantThreadId = "";
+        }
+
+        string[] categories = (await ClassifyQuestion(question)).Split(";");
+        if (!categories.Any())
+        {
+            throw new InvalidOperationException("Failed to classify the question.");
+        }
+
+        var tmpQuestions = await _ctx.Questions
+            .Include(q => q.Categories)
+            .Include(q => q.Answers)
+            .Where(q => q.Categories.Any(c => categories.Contains(c.Name)))
+            .ToListAsync();
+
+        string questionContext = tmpQuestions.Any()
+            ? tmpQuestions
+                .Select(q => $"Q: {q.Text} A: {string.Join("; ", q.Answers.Select(a => a.Text))}")
+                .Aggregate((a, b) => $"{a} | {b}")
+            : "";
+
+        question = $"Use this information: {questionContext} to answer the question: {question}";
+
+        var messageData = new
+        {
+            role = "user",
+            content = $"{question}. Use ISO 639-1 standard language code {language} for your answer."
         };
 
+        var content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8,
+            "application/json");
+        var response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/messages", content);
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+
+        var runData = new { assistant_id = _assistantId };
         content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
         response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/runs", content);
         responseContent = await response.Content.ReadAsStringAsync();
@@ -210,14 +244,23 @@ public class AiUtil
 
         return (result["id"]!.ToString(), threadId);
     }
+}
 
-    // returns questionId, threadId
-    public async Task<string> ClassifyQuestion(string question)
+public async Task<string> ClassifyQuestion(string question)
+{
+    string classifyThreadId = await GetClassifyThread();
+    if (string.IsNullOrEmpty(classifyThreadId))
     {
-        string runId = (await AskQuestion(_ctx, await GetClassifyThread(), question, "en-US", true)).Item1;
-        await WaitForResult(await GetClassifyThread(), runId);
-        return await GetResultString(await GetClassifyThread());
+        throw new InvalidOperationException("Failed to retrieve a valid classify thread ID.");
     }
+
+    string runId = (await AskQuestion(_ctx, classifyThreadId, question, "en-US", true)).Item1;
+    await WaitForResult(classifyThreadId, runId);
+    string res = await GetResultString(classifyThreadId);
+    return res;
+}
+
+
 
     public async Task<bool> CheckStatus(string threadId, string runId)
     {
