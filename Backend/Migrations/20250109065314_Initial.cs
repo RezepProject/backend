@@ -13,6 +13,19 @@ namespace backend.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "backgroundimage",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    base64image = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_backgroundimage", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "config",
                 columns: table => new
                 {
@@ -37,6 +50,19 @@ namespace backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_question", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "questioncategory",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    name = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_questioncategory", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -77,10 +103,12 @@ namespace backend.Migrations
                     config_user = table.Column<int>(type: "integer", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     background_image = table.Column<string>(type: "text", nullable: false),
+                    background_image_id = table.Column<int>(type: "integer", nullable: false),
                     language = table.Column<string>(type: "text", nullable: false),
                     talking_speed = table.Column<double>(type: "double precision", nullable: false),
                     greeting_message = table.Column<string>(type: "text", nullable: false),
-                    state = table.Column<bool>(type: "boolean", nullable: false)
+                    state = table.Column<bool>(type: "boolean", nullable: false),
+                    ai_in_use = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -105,6 +133,30 @@ namespace backend.Migrations
                         column: x => x.question_id,
                         principalTable: "question",
                         principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "questionquestioncategory (dictionary<string, object>)",
+                columns: table => new
+                {
+                    categories_id = table.Column<int>(type: "integer", nullable: false),
+                    questions_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_questionquestioncategory_dictionary_string_object", x => new { x.categories_id, x.questions_id });
+                    table.ForeignKey(
+                        name: "fk_questionquestioncategory_dictionary_string_object_quest",
+                        column: x => x.categories_id,
+                        principalTable: "questioncategory",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_questionquestioncategory_dictionary_string_object_quest1",
+                        column: x => x.questions_id,
+                        principalTable: "question",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -156,9 +208,19 @@ namespace backend.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "role",
+                columns: new[] { "id", "name" },
+                values: new object[] { 1, "ADMIN" });
+
+            migrationBuilder.InsertData(
                 table: "setting",
-                columns: new[] { "id", "background_image", "config_user", "config_user_id", "greeting_message", "language", "name", "state", "talking_speed" },
-                values: new object[] { 1, "https://example.com/image.jpg", 0, 0, "Hello, how can I help you?", "en-US", "Rezep-1", false, 0.69999999999999996 });
+                columns: new[] { "id", "ai_in_use", "background_image", "background_image_id", "config_user", "config_user_id", "greeting_message", "language", "name", "state", "talking_speed" },
+                values: new object[] { 1, "ChatGPT", "https://example.com/image.jpg", 1, 0, 0, "Hello, how can I help you?", "en-US", "Rezep-1", true, 0.69999999999999996 });
+
+            migrationBuilder.InsertData(
+                table: "configuser",
+                columns: new[] { "id", "email", "first_name", "last_name", "password", "refresh_token", "role_id", "token_created", "token_expires" },
+                values: new object[] { 1, "test", "test", "test", "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2", "refresh_token_value", 1, new DateTime(2025, 1, 9, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9941), new DateTime(2025, 1, 16, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9952) });
 
             migrationBuilder.CreateIndex(
                 name: "ix_answer_question_id",
@@ -174,6 +236,11 @@ namespace backend.Migrations
                 name: "ix_configusertoken_role_id",
                 table: "configusertoken",
                 column: "role_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_questionquestioncategory_dictionary_string_object_quest",
+                table: "questionquestioncategory (dictionary<string, object>)",
+                column: "questions_id");
         }
 
         /// <inheritdoc />
@@ -181,6 +248,9 @@ namespace backend.Migrations
         {
             migrationBuilder.DropTable(
                 name: "answer");
+
+            migrationBuilder.DropTable(
+                name: "backgroundimage");
 
             migrationBuilder.DropTable(
                 name: "config");
@@ -192,16 +262,22 @@ namespace backend.Migrations
                 name: "configusertoken");
 
             migrationBuilder.DropTable(
+                name: "questionquestioncategory (dictionary<string, object>)");
+
+            migrationBuilder.DropTable(
                 name: "refreshtoken");
 
             migrationBuilder.DropTable(
                 name: "setting");
 
             migrationBuilder.DropTable(
-                name: "question");
+                name: "role");
 
             migrationBuilder.DropTable(
-                name: "role");
+                name: "questioncategory");
+
+            migrationBuilder.DropTable(
+                name: "question");
         }
     }
 }

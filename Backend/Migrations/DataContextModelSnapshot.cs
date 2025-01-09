@@ -182,8 +182,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 1, 7, 11, 50, 43, 541, DateTimeKind.Utc).AddTicks(2324),
-                            TokenExpires = new DateTime(2025, 1, 14, 11, 50, 43, 541, DateTimeKind.Utc).AddTicks(2331)
+                            TokenCreated = new DateTime(2025, 1, 9, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9941),
+                            TokenExpires = new DateTime(2025, 1, 16, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9952)
                         });
                 });
 
