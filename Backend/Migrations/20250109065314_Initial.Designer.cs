@@ -12,8 +12,8 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240918165000_QuestionCategory")]
-    partial class QuestionCategory
+    [Migration("20250109065314_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,25 @@ namespace backend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseSerialColumns(modelBuilder);
+
+            modelBuilder.Entity("QuestionQuestionCategory", b =>
+                {
+                    b.Property<int>("CategoriesId")
+                        .HasColumnType("integer")
+                        .HasColumnName("categories_id");
+
+                    b.Property<int>("QuestionsId")
+                        .HasColumnType("integer")
+                        .HasColumnName("questions_id");
+
+                    b.HasKey("CategoriesId", "QuestionsId")
+                        .HasName("pk_questionquestioncategory_dictionary_string_object");
+
+                    b.HasIndex("QuestionsId")
+                        .HasDatabaseName("ix_questionquestioncategory_dictionary_string_object_quest");
+
+                    b.ToTable("questionquestioncategory (dictionary<string, object>)", (string)null);
+                });
 
             modelBuilder.Entity("backend.Entities.Answer", b =>
                 {
@@ -55,6 +74,26 @@ namespace backend.Migrations
                         .HasDatabaseName("ix_answer_question_id");
 
                     b.ToTable("answer", (string)null);
+                });
+
+            modelBuilder.Entity("backend.Entities.BackgroundImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Base64Image")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("base64image");
+
+                    b.HasKey("Id")
+                        .HasName("pk_backgroundimage");
+
+                    b.ToTable("backgroundimage", (string)null);
                 });
 
             modelBuilder.Entity("backend.Entities.Config", b =>
@@ -135,6 +174,20 @@ namespace backend.Migrations
                         .HasDatabaseName("ix_configuser_role_id");
 
                     b.ToTable("configuser", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Email = "test",
+                            FirstName = "test",
+                            LastName = "test",
+                            Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
+                            RefreshToken = "refresh_token_value",
+                            RoleId = 1,
+                            TokenCreated = new DateTime(2025, 1, 9, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9941),
+                            TokenExpires = new DateTime(2025, 1, 16, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9952)
+                        });
                 });
 
             modelBuilder.Entity("backend.Entities.ConfigUserToken", b =>
@@ -181,10 +234,6 @@ namespace backend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("category_id");
-
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("text")
@@ -192,9 +241,6 @@ namespace backend.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_question");
-
-                    b.HasIndex("CategoryId")
-                        .HasDatabaseName("ix_question_category_id");
 
                     b.ToTable("question", (string)null);
                 });
@@ -265,6 +311,13 @@ namespace backend.Migrations
                         .HasName("pk_role");
 
                     b.ToTable("role", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "ADMIN"
+                        });
                 });
 
             modelBuilder.Entity("backend.Entities.Setting", b =>
@@ -276,10 +329,19 @@ namespace backend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AiInUse")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ai_in_use");
+
                     b.Property<string>("BackgroundImage")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("background_image");
+
+                    b.Property<int>("BackgroundImageId")
+                        .HasColumnType("integer")
+                        .HasColumnName("background_image_id");
 
                     b.Property<int>("ConfigUser")
                         .HasColumnType("integer")
@@ -321,15 +383,34 @@ namespace backend.Migrations
                         new
                         {
                             Id = 1,
+                            AiInUse = "ChatGPT",
                             BackgroundImage = "https://example.com/image.jpg",
+                            BackgroundImageId = 1,
                             ConfigUser = 0,
                             ConfigUserId = 0,
                             GreetingMessage = "Hello, how can I help you?",
                             Language = "en-US",
                             Name = "Rezep-1",
-                            State = false,
+                            State = true,
                             TalkingSpeed = 0.69999999999999996
                         });
+                });
+
+            modelBuilder.Entity("QuestionQuestionCategory", b =>
+                {
+                    b.HasOne("backend.Entities.QuestionCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_questionquestioncategory_dictionary_string_object_quest");
+
+                    b.HasOne("backend.Entities.Question", null)
+                        .WithMany()
+                        .HasForeignKey("QuestionsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_questionquestioncategory_dictionary_string_object_quest1");
                 });
 
             modelBuilder.Entity("backend.Entities.Answer", b =>
@@ -362,18 +443,6 @@ namespace backend.Migrations
                         .HasConstraintName("fk_configusertoken_roles_role_id");
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("backend.Entities.Question", b =>
-                {
-                    b.HasOne("backend.Entities.QuestionCategory", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_question_question_categories_category_id");
-
-                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("backend.Entities.Question", b =>

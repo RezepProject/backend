@@ -9,6 +9,14 @@ spec:
     requests:
       storage: 1Gi
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+data:
+  init-database.sql: |
+    CREATE DATABASE "herbert-database";
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,7 +33,6 @@ spec:
       labels:
         app: herbert-database
     spec:
-
       containers:
         - name: postgres
           image: postgres:latest
@@ -37,10 +44,15 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: postgres-storage
+            - mountPath: /docker-entrypoint-initdb.d/
+              name: postgres-init-scripts
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
+        - name: postgres-init-scripts
+          configMap:
+            name: postgres-init-scripts
 ---
 apiVersion: v1
 kind: Service
