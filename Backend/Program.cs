@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using dotenv.net;
-
 namespace backend;
 
 public static class Program
@@ -18,7 +17,7 @@ public static class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.Configuration.AddEnvironmentVariables();
         config = builder.Configuration;
-
+        
         builder.Services.AddDbContext<DataContext>(options
             => options
                 .UseNpgsql(config["DB_CONNECTION_STRING"])
@@ -34,14 +33,14 @@ public static class Program
         {
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Name = "Authorization",
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer",
+                Name         = "Authorization",
+                Type         = SecuritySchemeType.ApiKey,
+                Scheme       = "Bearer",
                 BearerFormat = "JWT",
-                In = ParameterLocation.Header,
-                Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
-                              "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
-                              "Example: \"Bearer {token}\""
+                In           = ParameterLocation.Header,
+                Description  = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
+                               "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
+                               "Example: \"Bearer {token}\""
             });
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
@@ -51,7 +50,7 @@ public static class Program
                         Reference = new OpenApiReference
                         {
                             Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
+                            Id   = "Bearer"
                         }
                     },
                     new string[] { }
@@ -64,13 +63,13 @@ public static class Program
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
+                    ValidateIssuer           = true,
+                    ValidateAudience         = true,
+                    ValidateLifetime         = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = SecretsProvider.Instance.JwtIssuer,
-                    ValidAudience = SecretsProvider.Instance.JwtAudience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey))
+                    ValidIssuer              = SecretsProvider.Instance.JwtIssuer,
+                    ValidAudience            = SecretsProvider.Instance.JwtAudience,
+                    IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey))
                 };
             });
 
@@ -89,9 +88,7 @@ public static class Program
 
         // TODO: change before production
         app.UseCors(b => b
-            .WithOrigins("http://localhost:44398", "http://localhost:5260", "http://localhost:8080",
-                "http://localhost:5003", "http://localhost:4000"
-                , "https://rezep-project-5chif.web.app/", "10.214.3.230")
+            .SetIsOriginAllowed(origin => true)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -101,7 +98,6 @@ public static class Program
         {
             devMode = true;
         }
-
         app.UseSwagger();
         app.UseSwaggerUI();
 
@@ -116,7 +112,7 @@ public static class Program
 }
 
 /*
-
+ 
 {
   "question": "Wheres the gym??",
   "sessionId": "",
