@@ -88,7 +88,7 @@ public static class Program
 
         // TODO: change before production
         app.UseCors(b => b
-            .WithOrigins("http://localhost:44398", "http://localhost:5260", "http://localhost:8080", "http://localhost:5003", "http://localhost:4000")
+            .SetIsOriginAllowed(origin => true)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
