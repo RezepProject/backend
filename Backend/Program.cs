@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using dotenv.net;
 
 namespace backend;
 
@@ -18,40 +19,29 @@ public static class Program
         builder.Configuration.AddEnvironmentVariables();
         config = builder.Configuration;
 
-        // Datenbankkontext konfigurieren
-        builder.Services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(config["DB_CONNECTION_STRING"])
-                   .UseSnakeCaseNamingConvention());
+        builder.Services.AddDbContext<DataContext>(options
+            => options
+                .UseNpgsql(config["DB_CONNECTION_STRING"])
+                .UseSnakeCaseNamingConvention());
 
-        // Routing und Controller
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
         builder.Services.AddControllers();
 
-        // CORS konfigurieren
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAll", policy =>
-            {
-                policy.AllowAnyOrigin()
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
-            });
-        });
-
-        // Swagger für API-Dokumentation
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Name         = "Authorization",
-                Type         = SecuritySchemeType.ApiKey,
-                Scheme       = "Bearer",
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
                 BearerFormat = "JWT",
-                In           = ParameterLocation.Header,
-                Description  = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
-                               "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
-                               "Example: \"Bearer {token}\""
+                In = ParameterLocation.Header,
+                Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
+                              "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
+                              "Example: \"Bearer {token}\""
             });
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
@@ -61,7 +51,7 @@ public static class Program
                         Reference = new OpenApiReference
                         {
                             Type = ReferenceType.SecurityScheme,
-                            Id   = "Bearer"
+                            Id = "Bearer"
                         }
                     },
                     new string[] { }
@@ -69,57 +59,68 @@ public static class Program
             });
         });
 
-        // JWT-Authentifizierung
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer           = true,
-                    ValidateAudience         = true,
-                    ValidateLifetime         = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer              = SecretsProvider.Instance.JwtIssuer,
-                    ValidAudience            = SecretsProvider.Instance.JwtAudience,
-                    IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey))
+                    ValidIssuer = SecretsProvider.Instance.JwtIssuer,
+                    ValidAudience = SecretsProvider.Instance.JwtAudience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey))
                 };
             });
 
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(options =>
+        {
+            //options.AddPolicy("Admin", policy => policy.RequireClaim("IsAdmin"));
+        });
 
         var app = builder.Build();
 
-        // Datenbankmigrationen
         using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
         {
             await using var context = scope.ServiceProvider.GetRequiredService<DataContext>();
             await context.Database.MigrateAsync();
         }
 
-        // CORS aktivieren
-        app.UseCors("AllowAll");
+        // TODO: change before production
+        app.UseCors(b => b
+            .WithOrigins("http://localhost:44398", "http://localhost:5260", "http://localhost:8080",
+                "http://localhost:5003", "http://localhost:4000"
+                , "https://rezep-project-5chif.web.app/", "10.214.3.230")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
 
-        // Entwicklungsmodus erkennen
+        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             devMode = true;
         }
 
-        // Swagger aktivieren
         app.UseSwagger();
         app.UseSwaggerUI();
 
         app.UseHttpsRedirection();
 
-        // Authentifizierung und Autorisierung
-        app.UseAuthentication();
-        app.UseAuthorization();
-
         app.MapControllers();
 
-        // AI-Utility initialisieren
         AiUtil.GetInstance();
 
         await app.RunAsync();
     }
 }
+
+/*
+
+{
+  "question": "Wheres the gym??",
+  "sessionId": "",
+  "language": "en"
+}
+
+*/
