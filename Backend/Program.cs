@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using dotenv.net;
+
 namespace backend;
 
 public static class Program
@@ -17,17 +17,28 @@ public static class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.Configuration.AddEnvironmentVariables();
         config = builder.Configuration;
-        
-        builder.Services.AddDbContext<DataContext>(options
-            => options
-                .UseNpgsql(config["DB_CONNECTION_STRING"])
-                .UseSnakeCaseNamingConvention());
 
+        // Datenbankkontext konfigurieren
+        builder.Services.AddDbContext<DataContext>(options =>
+            options.UseNpgsql(config["DB_CONNECTION_STRING"])
+                   .UseSnakeCaseNamingConvention());
+
+        // Routing und Controller
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
         builder.Services.AddControllers();
 
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        // CORS konfigurieren
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            });
+        });
+
+        // Swagger für API-Dokumentation
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
@@ -58,6 +69,7 @@ public static class Program
             });
         });
 
+        // JWT-Authentifizierung
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -73,50 +85,41 @@ public static class Program
                 };
             });
 
-        builder.Services.AddAuthorization(options =>
-        {
-            //options.AddPolicy("Admin", policy => policy.RequireClaim("IsAdmin"));
-        });
+        builder.Services.AddAuthorization();
 
         var app = builder.Build();
 
+        // Datenbankmigrationen
         using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
         {
             await using var context = scope.ServiceProvider.GetRequiredService<DataContext>();
             await context.Database.MigrateAsync();
         }
 
-        // TODO: change before production
-        app.UseCors(b => b
-            .SetIsOriginAllowed(origin => true)
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials());
+        // CORS aktivieren
+        app.UseCors("AllowAll");
 
-        // Configure the HTTP request pipeline.
+        // Entwicklungsmodus erkennen
         if (app.Environment.IsDevelopment())
         {
             devMode = true;
         }
+
+        // Swagger aktivieren
         app.UseSwagger();
         app.UseSwaggerUI();
 
         app.UseHttpsRedirection();
 
+        // Authentifizierung und Autorisierung
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         app.MapControllers();
 
+        // AI-Utility initialisieren
         AiUtil.GetInstance();
 
         await app.RunAsync();
     }
 }
-
-/*
- 
-{
-  "question": "Wheres the gym??",
-  "sessionId": "",
-  "language": "en"
-}
-
-*/
