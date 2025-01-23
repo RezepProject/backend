@@ -25,6 +25,7 @@ public class DataContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Setting> Settings { get; set; }
     public DbSet<BackgroundImage> BackgroundImages { get; set; }
+    public DbSet<Tasks> Tasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +45,7 @@ public class DataContext : DbContext
         CreateConfigUserToken(modelBuilder);
         CreateRefreshToken(modelBuilder);
         CreateSetting(modelBuilder);
+        CreateTasks(modelBuilder);
 
         // Seed initial data
         modelBuilder.Entity<Role>().HasData(new Role { Id = 1, Name = "ADMIN" });
@@ -60,7 +62,15 @@ public class DataContext : DbContext
             TokenExpires = DateTime.UtcNow.AddDays(7)
         });
     }
-    
+
+    private void CreateTasks(ModelBuilder modelBuilder)
+    {
+        var tasks = modelBuilder.Entity<Tasks>();
+        tasks.Property(t => t.Id).UseIdentityColumn();
+        tasks.Property(t => t.Text).IsRequired();
+        tasks.Property(t => t.Done).IsRequired();
+    }
+
     private static void CreateBackgroundImage(ModelBuilder modelBuilder)
     {
         var backgroundImage = modelBuilder.Entity<BackgroundImage>();
@@ -223,4 +233,5 @@ public class DataContext : DbContext
             .Property(s => s.AiInUse)
             .IsRequired();
     }
+    
 }
