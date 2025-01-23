@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend;
@@ -11,9 +12,11 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250123150846_Tasks")]
+    partial class Tasks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,8 +185,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 1, 9, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9941),
-                            TokenExpires = new DateTime(2026, 1, 16, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9952)
+                            TokenCreated = new DateTime(2025, 1, 23, 15, 8, 45, 656, DateTimeKind.Utc).AddTicks(9430),
+                            TokenExpires = new DateTime(2025, 1, 30, 15, 8, 45, 656, DateTimeKind.Utc).AddTicks(9445)
                         });
                 });
 

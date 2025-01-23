@@ -3,6 +3,7 @@ using System.Text;
 using backend.Entities;
 using backend.Util;
 using Newtonsoft.Json;
+using Task = backend.Entities.Task;
 
 namespace backend.Controllers;
 
@@ -41,10 +42,32 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         var (runId, threadId) = await aiUtil.AskQuestion(ctx, sessionId, question, language);
 
         await aiUtil.WaitForResult(threadId, runId);
+        var response = await aiUtil.GetResultString(threadId);
+        
+        if (response.Contains("{Task:"))
+        {
+            var startIndex = response.IndexOf("{Task:", StringComparison.Ordinal) + 6;
+            var endIndex = response.IndexOf("}", startIndex, StringComparison.Ordinal);
+            var taskText = response.Substring(startIndex, endIndex - startIndex).Trim();
 
+            response = response.Remove(response.IndexOf("{Task:", StringComparison.Ordinal), endIndex - response.IndexOf("{Task:", StringComparison.Ordinal) + 1).Trim();
+
+            var newTask = new Task
+            {
+                Text = taskText,
+                Done = false
+            };
+
+            ctx.Tasks.Add(newTask);
+            await ctx.SaveChangesAsync();
+
+            Console.WriteLine($"Task created: {newTask.Text}"); 
+        }
+
+        
         UserResponse userResponse = new UserResponse()
         {
-            Answer = await aiUtil.GetResultString(threadId),
+            Answer = response,
             SessionId = threadId,
             TimeNeeded = (DateTime.Now - start).TotalSeconds.ToString()
         };
