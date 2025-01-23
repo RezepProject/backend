@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Task = backend.Entities.Task;
 
 namespace backend.Controllers;
 
@@ -11,13 +12,13 @@ namespace backend.Controllers;
 public class TaskController(DataContext ctx) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Tasks>>> GetTasks()
+    public async Task<ActionResult<IEnumerable<Task>>> GetTasks()
     {
         return await ctx.Tasks.ToListAsync();
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<Tasks>> GetTask(int id)
+    public async Task<ActionResult<Task>> GetTask(int id)
     {
         var task = await ctx.Tasks.FindAsync(id);
         return task == null ? NotFound("Task id not found!") : task;
@@ -46,9 +47,9 @@ public class TaskController(DataContext ctx) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Tasks>> CreateTask(CreateTask newTask)
+    public async Task<ActionResult<Task>> CreateTask(CreateTask newTask)
     {
-        var task = ctx.Tasks.Add(new Tasks { Text = newTask.Text, Done = newTask.Done });
+        var task = ctx.Tasks.Add(new Task { Text = newTask.Text, Done = newTask.Done });
         await ctx.SaveChangesAsync();
 
         return CreatedAtAction("GetTask", new { id = task.Entity.Id }, newTask);

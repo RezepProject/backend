@@ -1,6 +1,7 @@
 ﻿using System;
 using backend.Entities;
 using Microsoft.EntityFrameworkCore;
+using Task = backend.Entities.Task;
 
 namespace backend;
 
@@ -25,7 +26,7 @@ public class DataContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Setting> Settings { get; set; }
     public DbSet<BackgroundImage> BackgroundImages { get; set; }
-    public DbSet<Tasks> Tasks { get; set; }
+    public DbSet<Task> Tasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -65,7 +66,7 @@ public class DataContext : DbContext
 
     private void CreateTasks(ModelBuilder modelBuilder)
     {
-        var tasks = modelBuilder.Entity<Tasks>();
+        var tasks = modelBuilder.Entity<Task>();
         tasks.Property(t => t.Id).UseIdentityColumn();
         tasks.Property(t => t.Text).IsRequired();
         tasks.Property(t => t.Done).IsRequired();
