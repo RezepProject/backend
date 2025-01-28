@@ -116,6 +116,20 @@ namespace backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "task",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    text = table.Column<string>(type: "text", nullable: false),
+                    done = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_task", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "answer",
                 columns: table => new
                 {
@@ -220,7 +234,7 @@ namespace backend.Migrations
             migrationBuilder.InsertData(
                 table: "configuser",
                 columns: new[] { "id", "email", "first_name", "last_name", "password", "refresh_token", "role_id", "token_created", "token_expires" },
-                values: new object[] { 1, "test", "test", "test", "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2", "refresh_token_value", 1, new DateTime(2025, 1, 9, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9941), new DateTime(2025, 1, 16, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9952) });
+                values: new object[] { 1, "test", "test", "test", "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2", "refresh_token_value", 1, new DateTime(2025, 1, 28, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2279), new DateTime(2025, 2, 4, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2296) });
 
             migrationBuilder.CreateIndex(
                 name: "ix_answer_question_id",
@@ -269,6 +283,9 @@ namespace backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "setting");
+
+            migrationBuilder.DropTable(
+                name: "task");
 
             migrationBuilder.DropTable(
                 name: "role");

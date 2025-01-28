@@ -12,8 +12,8 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250123150846_Tasks")]
-    partial class Tasks
+    [Migration("20250128065430_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -185,8 +185,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 1, 23, 15, 8, 45, 656, DateTimeKind.Utc).AddTicks(9430),
-                            TokenExpires = new DateTime(2025, 1, 30, 15, 8, 45, 656, DateTimeKind.Utc).AddTicks(9445)
+                            TokenCreated = new DateTime(2025, 1, 28, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2279),
+                            TokenExpires = new DateTime(2025, 2, 4, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2296)
                         });
                 });
 
@@ -396,7 +396,7 @@ namespace backend.Migrations
                         });
                 });
 
-            modelBuilder.Entity("backend.Entities.Tasks", b =>
+            modelBuilder.Entity("backend.Entities.Task", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -415,9 +415,9 @@ namespace backend.Migrations
                         .HasColumnName("text");
 
                     b.HasKey("Id")
-                        .HasName("pk_tasks");
+                        .HasName("pk_task");
 
-                    b.ToTable("tasks", (string)null);
+                    b.ToTable("task", (string)null);
                 });
 
             modelBuilder.Entity("QuestionQuestionCategory", b =>
