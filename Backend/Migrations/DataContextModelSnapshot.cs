@@ -182,8 +182,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 1, 9, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9941),
-                            TokenExpires = new DateTime(2026, 1, 16, 6, 53, 13, 932, DateTimeKind.Utc).AddTicks(9952)
+                            TokenCreated = new DateTime(2025, 1, 28, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2279),
+                            TokenExpires = new DateTime(2025, 2, 4, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2296)
                         });
                 });
 
@@ -393,7 +393,7 @@ namespace backend.Migrations
                         });
                 });
 
-            modelBuilder.Entity("backend.Entities.Tasks", b =>
+            modelBuilder.Entity("backend.Entities.Task", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -412,9 +412,9 @@ namespace backend.Migrations
                         .HasColumnName("text");
 
                     b.HasKey("Id")
-                        .HasName("pk_tasks");
+                        .HasName("pk_task");
 
-                    b.ToTable("tasks", (string)null);
+                    b.ToTable("task", (string)null);
                 });
 
             modelBuilder.Entity("QuestionQuestionCategory", b =>
