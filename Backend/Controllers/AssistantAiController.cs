@@ -3,7 +3,6 @@ using System.Text;
 using backend.Entities;
 using backend.Util;
 using Newtonsoft.Json;
-using Task = backend.Entities.Task;
 
 namespace backend.Controllers;
 
@@ -52,7 +51,7 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
 
             response = response.Remove(response.IndexOf("{Task:", StringComparison.Ordinal), endIndex - response.IndexOf("{Task:", StringComparison.Ordinal) + 1).Trim();
 
-            var newTask = new Task
+            var newTask = new EntityTask
             {
                 Text = taskText,
                 Done = false

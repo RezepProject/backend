@@ -1,6 +1,6 @@
 ﻿namespace backend.Entities;
 
-public class Task
+public class EntityTask
 {
     public int Id { get; set; }
     public string Text { get; set; }

@@ -21,6 +21,7 @@ namespace Test.Controller
         public QuestionControllerTests(CustomWebApplicationFactory<Program> factory)
         {
             _client = factory.CreateClient();
+            factory.InitializeDatabase();
             SeedDataAsync(factory).GetAwaiter().GetResult();
         }
 
@@ -30,7 +31,6 @@ namespace Test.Controller
             {
                 var scopedServices = scope.ServiceProvider;
                 var db = scopedServices.GetRequiredService<DataContext>();
-                db.Database.EnsureCreated();
 
                 if (!await db.Questions.AnyAsync())
                 {
@@ -63,7 +63,7 @@ namespace Test.Controller
             var questions = JsonSerializer.Deserialize<IEnumerable<object>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             Assert.NotNull(questions);
-            Assert.Single(questions); // Expecting one question seeded
+            Assert.Equal(1, questions.Count());
         }
 
         [Fact]
@@ -82,7 +82,7 @@ namespace Test.Controller
         [Fact]
         public async Task Test_GetQuestion_NonExistingId_ReturnsNotFound()
         {
-            var response = await _client.GetAsync("/question/999"); // Assume 999 does not exist
+            var response = await _client.GetAsync("/question/999");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
@@ -128,10 +128,9 @@ namespace Test.Controller
                 }
             };
 
-            var response = await _client.PutAsJsonAsync("/question/1", updatedQuestion); // Assume ID 1 exists
+            var response = await _client.PutAsJsonAsync("/question/1", updatedQuestion);
             response.EnsureSuccessStatusCode();
 
-            // Further validation can be done by retrieving the updated question
             var getResponse = await _client.GetAsync("/question/1");
             var json = await getResponse.Content.ReadAsStringAsync();
             var question = JsonSerializer.Deserialize<Question>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -155,14 +154,14 @@ namespace Test.Controller
         [Fact]
         public async Task Test_DeleteQuestion_ExistingId_ReturnsNoContent()
         {
-            var response = await _client.DeleteAsync("/question/1"); // Assume ID 1 exists
+            var response = await _client.DeleteAsync("/question/1");
             response.EnsureSuccessStatusCode();
         }
 
         [Fact]
         public async Task Test_DeleteQuestion_NonExistingId_ReturnsNotFound()
         {
-            var response = await _client.DeleteAsync("/question/999"); // Assume 999 does not exist
+            var response = await _client.DeleteAsync("/question/999");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
@@ -176,7 +175,7 @@ namespace Test.Controller
             var categories = JsonSerializer.Deserialize<IEnumerable<CreateQuestionCategory>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             Assert.NotNull(categories);
-            Assert.NotEmpty(categories); // Expect to find at least one category
+            Assert.NotEmpty(categories);
         }
     }
 }

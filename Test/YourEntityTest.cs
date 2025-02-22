@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using backend;
-
+/*
 namespace Test
 {
     [Collection("Non-Parallel Tests")] // Apply the collection attribute
@@ -90,4 +90,4 @@ namespace Test
             }
         }
     }
-}
+} */

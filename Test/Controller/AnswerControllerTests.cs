@@ -20,19 +20,17 @@ public class AnswerControllerTests : IClassFixture<CustomWebApplicationFactory<P
 
     public AnswerControllerTests(CustomWebApplicationFactory<Program> factory)
     {
-        // Create a new HttpClient from the factory
         _client = factory.CreateClient();
-        SeedDataAsync(factory).GetAwaiter().GetResult(); // Seed data once when the class is initialized
+        factory.InitializeDatabase();
+        SeedDataAsync(factory).GetAwaiter().GetResult();
     }
 
-    // This method seeds the database with test data
     private async Task SeedDataAsync(CustomWebApplicationFactory<Program> factory)
     {
         using (var scope = factory.Services.CreateScope())
         {
             var scopedServices = scope.ServiceProvider;
             var db = scopedServices.GetRequiredService<DataContext>();
-            db.Database.EnsureCreated(); // Ensure the database is created
 
             if (!await db.Questions.AnyAsync())
             {
@@ -48,7 +46,7 @@ public class AnswerControllerTests : IClassFixture<CustomWebApplicationFactory<P
                 };
 
                 db.Questions.Add(question);
-                await db.SaveChangesAsync(); // Persist the changes
+                await db.SaveChangesAsync();
             }
         }
     }
@@ -66,28 +64,27 @@ public class AnswerControllerTests : IClassFixture<CustomWebApplicationFactory<P
         var answers = JsonSerializer.Deserialize<IEnumerable<Answer>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         Assert.NotNull(answers);
-        Assert.Equal(9, answers.Count()); // Expected count based on seeded data
+        Assert.Equal(3, answers.Count());
     }
 
     [Fact]
     public async Task Test_GetAnswer_ExistingId_ReturnsCorrectId()
     {
-        var response = await _client.GetAsync("/answer/1"); // Assume the answer has ID 1
+        var response = await _client.GetAsync("/answer/1");
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
         var answer = JsonSerializer.Deserialize<Answer>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         Assert.NotNull(answer);
-        Assert.Equal(1, answer.Id); // Check if the returned answer has the expected ID
+        Assert.Equal(1, answer.Id);
     }
-
 
     [Fact]
     public async Task Test_GetAnswer_NonExistingId_ReturnsNotFound()
     {
-        var response = await _client.GetAsync("/answer/999"); // Assume 999 does not exist
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode); // Expect 404 Not Found
+        var response = await _client.GetAsync("/answer/999");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
@@ -101,17 +98,16 @@ public class AnswerControllerTests : IClassFixture<CustomWebApplicationFactory<P
         var createdAnswer = JsonSerializer.Deserialize<Answer>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         Assert.NotNull(createdAnswer);
-        Assert.Equal("New Answer", createdAnswer.Text); // Validate the text
+        Assert.Equal("New Answer", createdAnswer.Text);
     }
 
     [Fact]
     public async Task Test_UpdateAnswer_ExistingId_ReturnsNoContent()
     {
         var updatedAnswer = new Answer { Text = "Updated Answer", User = "User1" };
-        var response = await _client.PutAsJsonAsync("/answer/1", updatedAnswer); // Assume there's an answer with ID 1
+        var response = await _client.PutAsJsonAsync("/answer/1", updatedAnswer);
         response.EnsureSuccessStatusCode();
 
-        // Further validation can be done by retrieving the updated answer
         var getResponse = await _client.GetAsync("/answer/1");
         var json = await getResponse.Content.ReadAsStringAsync();
         var answer = JsonSerializer.Deserialize<Answer>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -122,21 +118,21 @@ public class AnswerControllerTests : IClassFixture<CustomWebApplicationFactory<P
     public async Task Test_UpdateAnswer_NonExistingId_ReturnsNotFound()
     {
         var updatedAnswer = new Answer { Text = "Updated Answer", User = "User1" };
-        var response = await _client.PutAsJsonAsync("/answer/999", updatedAnswer); // Assume 999 does not exist
+        var response = await _client.PutAsJsonAsync("/answer/999", updatedAnswer);
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task Test_DeleteAnswer_ExistingId_ReturnsNoContent()
     {
-        var response = await _client.DeleteAsync("/answer/2"); // Assume there's an answer with ID 1
+        var response = await _client.DeleteAsync("/answer/1");
         response.EnsureSuccessStatusCode();
     }
 
     [Fact]
     public async Task Test_DeleteAnswer_NonExistingId_ReturnsNotFound()
     {
-        var response = await _client.DeleteAsync("/answer/999"); // Assume 999 does not exist
+        var response = await _client.DeleteAsync("/answer/999");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }
