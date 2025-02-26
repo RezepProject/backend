@@ -27,6 +27,7 @@ public class DataContext : DbContext
     public DbSet<Setting> Settings { get; set; }
     public DbSet<BackgroundImage> BackgroundImages { get; set; }
     public DbSet<Task> Tasks { get; set; }
+    public DbSet<UserSession> UserSessions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +46,7 @@ public class DataContext : DbContext
         CreateAnswer(modelBuilder);
         CreateConfigUserToken(modelBuilder);
         CreateRefreshToken(modelBuilder);
+        CreateUserSession(modelBuilder);
         CreateSetting(modelBuilder);
         CreateTasks(modelBuilder);
 
@@ -191,6 +193,12 @@ public class DataContext : DbContext
             .UseIdentityColumn();
     }
 
+    private static void CreateUserSession(ModelBuilder modelBuilder)
+    {
+        var userSession = modelBuilder.Entity<UserSession>();
+        userSession.HasKey(us => us.SessionId);
+        userSession.Property(us => us.SessionId).IsRequired();
+    }
     private static void CreateSetting(ModelBuilder modelBuilder)
     {
         var setting = modelBuilder.Entity<Setting>();
