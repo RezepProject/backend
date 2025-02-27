@@ -2,6 +2,7 @@
 using System.Text;
 using backend.Entities;
 using backend.Util;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Task = backend.Entities.Task;
 
@@ -19,6 +20,7 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         public string Question { get; set; }
         public string? SessionId { get; set; }
         public string? Language { get; set; }
+        public Guid? UserSesson { get; set; }
     }
 
     public class UserResponse
@@ -26,6 +28,7 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         public string Answer { get; set; }
         public string SessionId { get; set; }
         public string TimeNeeded { get; set; }
+        public UserSession? UserSession { get; set; }
     }
 
 
@@ -38,11 +41,12 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         string language = userRequest.Language ?? "en-US";
 
         var aiUtil = AiUtil.GetInstance();
+        var us = await ctx.UserSessions.FirstOrDefaultAsync(us => us.SessionId == userRequest.UserSesson);
 
-        var (runId, threadId) = await aiUtil.AskQuestion(ctx, sessionId, question, language);
+        var (runId, threadId, userSession) = await aiUtil.AskQuestion(ctx, sessionId, question, language, userSession: us);
 
         await aiUtil.WaitForResult(threadId, runId);
-        var response = await aiUtil.GetResultString(threadId);
+        var response = await aiUtil.GetResultString(threadId, userSession);
         
         if (response.Contains("{Task:"))
         {
@@ -69,7 +73,8 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         {
             Answer = response,
             SessionId = threadId,
-            TimeNeeded = (DateTime.Now - start).TotalSeconds.ToString()
+            TimeNeeded = (DateTime.Now - start).TotalSeconds.ToString(),
+            UserSession = userSession
         };
 
         return Ok(userResponse);
