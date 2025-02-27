@@ -145,7 +145,8 @@ public class AiUtil
     }
 
 
-    public async Task<(string, string, UserSession? userSession)> AskQuestion(DataContext ctx, string? threadId, string question,
+    public async Task<(string, string, UserSession? userSession)> AskQuestion(DataContext ctx, string? threadId,
+        string question,
         string language, bool isClassification = false, UserSession? userSession = null)
     {
         _ctx = ctx;
@@ -192,6 +193,14 @@ public class AiUtil
             {
                 threadId = await GetThread();
                 _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
+            }
+            else
+            {
+                _threads.First(t => t.ThreadId == threadId).Time = DateTime.Now;
+            }
+
+            if (userSession == null)
+            {
                 userSession = new UserSession()
                 {
                     ChatGptThreadId = threadId
@@ -200,22 +209,11 @@ public class AiUtil
             }
             else
             {
-                _threads.First(t => t.ThreadId == threadId).Time = DateTime.Now;
-                if (userSession == null)
-                {
-                    userSession = new UserSession()
-                    {
-                        ChatGptThreadId = threadId
-                    };
-                    await ctx.UserSessions.AddAsync(userSession);
-                }
-                else
-                {
-                    userSession.ChatGptThreadId = threadId;
-                }
+                userSession.ChatGptThreadId = string.IsNullOrEmpty(userSession?.ChatGptThreadId)
+                    ? threadId
+                    : userSession.ChatGptThreadId;
+                threadId = userSession.ChatGptThreadId;
             }
-
-            await ctx.SaveChangesAsync();
 
             var tmpCategories = await _ctx.QuestionCategories.ToListAsync();
             if (tmpCategories.Count != _categories.Count)
@@ -254,14 +252,17 @@ public class AiUtil
             var content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8,
                 "application/json");
             var response =
-                await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{userSession.ChatGptThreadId}/messages", content);
+                await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{userSession.ChatGptThreadId}/messages",
+                    content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
             var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+            await ctx.SaveChangesAsync();
 
             var runData = new { assistant_id = _assistantId };
             content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
-            response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{userSession.ChatGptThreadId}/runs", content);
+            response = await _httpClient.PostAsync(
+                $"https://api.openai.com/v1/threads/{userSession.ChatGptThreadId}/runs", content);
             responseContent = await response.Content.ReadAsStringAsync();
 
             result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
@@ -310,6 +311,7 @@ public class AiUtil
         {
             throw new InvalidOperationException("Unexpected response structure.");
         }
+
         return result["data"][0]["content"][0]["text"]["value"].ToString();
     }
 

@@ -20,7 +20,7 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         public string Question { get; set; }
         public string? SessionId { get; set; }
         public string? Language { get; set; }
-        public Guid? UserSesson { get; set; }
+        public Guid? UserSession { get; set; }
     }
 
     public class UserResponse
@@ -41,7 +41,7 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         string language = userRequest.Language ?? "en-US";
 
         var aiUtil = AiUtil.GetInstance();
-        var us = await ctx.UserSessions.FirstOrDefaultAsync(us => us.SessionId == userRequest.UserSesson);
+        var us = await ctx.UserSessions.FirstOrDefaultAsync(us => us.SessionId == userRequest.UserSession);
 
         var (runId, threadId, userSession) = await aiUtil.AskQuestion(ctx, sessionId, question, language, userSession: us);
 
