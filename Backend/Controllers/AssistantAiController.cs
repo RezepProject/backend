@@ -87,4 +87,12 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         
         return Ok(new { Answer = answer, ThreadId = thread });
     }
+
+    [HttpPost("process-personal-data/{id:guid}")]
+    public async void SetPersonalData(Guid id, [FromBody] bool value)
+    {
+        var us = await ctx.UserSessions.FirstOrDefaultAsync(us => us.SessionId == id);
+        if (us != null) us.ProcessPersonalData = value;
+        await ctx.SaveChangesAsync();
+    }
 }

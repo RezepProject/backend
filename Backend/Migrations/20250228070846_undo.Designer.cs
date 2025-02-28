@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend;
@@ -11,9 +12,11 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250228070846_undo")]
+    partial class undo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,8 +185,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 2, 28, 7, 14, 54, 33, DateTimeKind.Utc).AddTicks(5917),
-                            TokenExpires = new DateTime(2025, 3, 7, 7, 14, 54, 33, DateTimeKind.Utc).AddTicks(5927)
+                            TokenCreated = new DateTime(2025, 2, 28, 7, 8, 46, 396, DateTimeKind.Utc).AddTicks(4765),
+                            TokenExpires = new DateTime(2025, 3, 7, 7, 8, 46, 396, DateTimeKind.Utc).AddTicks(4773)
                         });
                 });
 
@@ -434,6 +437,7 @@ namespace backend.Migrations
                         .HasColumnName("process_personal_data");
 
                     b.Property<string>("ReservationUrl")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("reservation_url");
 
