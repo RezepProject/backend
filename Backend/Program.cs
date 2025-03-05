@@ -19,7 +19,8 @@ namespace backend
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration.AddEnvironmentVariables();
-            
+
+            // Add FluentValidation validators from assemblies
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAnswerValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<UpdateAnswerValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateBackgroundImageValidator>();
@@ -31,12 +32,12 @@ namespace backend
             builder.Services.AddValidatorsFromAssemblyContaining<CreateRoleValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateTaskValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<UpdateTaskValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateRoleValidator>();
             
+
+            // Set configuration and check unit test mode
             config = builder.Configuration;
-
-            // Check for unit test mode using appsettings
             var isUnitTest = config["AppSettings:UnitTestMode"]?.ToLower() == "true";
-
             if (isUnitTest)
             {
                 Console.WriteLine("Running in unit test mode");
@@ -47,21 +48,17 @@ namespace backend
                 ? config.GetConnectionString("TestConnection")
                 : config.GetConnectionString("DefaultConnection");
 
-            // Print connection string components for debugging (except the password for security reasons)
-            var user = connectionString.Split(";").FirstOrDefault(x => x.StartsWith("Username="))?.Split("=")[1];
-            var password = connectionString.Split(";").FirstOrDefault(x => x.StartsWith("Password="))?.Split("=")[1];
-            var port = connectionString.Split(";").FirstOrDefault(x => x.StartsWith("Port="))?.Split("=")[1];
+            // Debugging: Print connection string components (excluding password for security reasons)
+            PrintConnectionStringDetails(connectionString);
 
-            Console.WriteLine($"Connecting to database with user: {user}, password: {password}, port: {port}");
-
+            // Add DbContext and configure routing
             builder.Services.AddDbContext<DataContext>(options =>
                 options.UseNpgsql(connectionString) // Use the selected connection string
                        .UseSnakeCaseNamingConvention());
-
             builder.Services.AddRouting(options => options.LowercaseUrls = true);
             builder.Services.AddControllers();
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            // Set up Swagger/OpenAPI documentation
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
             {
@@ -76,7 +73,7 @@ namespace backend
                                   "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
                                   "Example: \"Bearer {token}\""
                 });
-                
+
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
@@ -96,48 +93,21 @@ namespace backend
             // Conditionally add JWT authentication based on test mode
             if (!isUnitTest)
             {
-                builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                    .AddJwtBearer(options =>
-                    {
-                        options.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            ValidateIssuer = true,
-                            ValidateAudience = true,
-                            ValidateLifetime = true,
-                            ValidateIssuerSigningKey = true,
-                            ValidIssuer = SecretsProvider.Instance.JwtIssuer,
-                            ValidAudience = SecretsProvider.Instance.JwtAudience,
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey))
-                        };
-                    });
-
-                builder.Services.AddAuthorization(options =>
-                {
-                    // You can add authorization policies here if necessary
-                    // For example: options.AddPolicy("Admin", policy => policy.RequireClaim("IsAdmin"));
-                });
+                ConfigureJwtAuthentication(builder);
             }
 
             var app = builder.Build();
 
-            // Only apply migrations if not in unit test mode
+            // Apply migrations if not in unit test mode
             if (!isUnitTest)
             {
-                using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
-                {
-                    await using var context = scope.ServiceProvider.GetRequiredService<DataContext>();
-                    await context.Database.MigrateAsync(); // Apply all pending migrations
-                }
+                await ApplyDatabaseMigrations(app);
             }
 
-            // TODO: change before production
-            app.UseCors(b => b
-                .SetIsOriginAllowed(origin => true)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials());
+            // Configure CORS
+            ConfigureCors(app);
 
-            // Configure the HTTP request pipeline.
+            // Set up the HTTP request pipeline
             if (app.Environment.IsDevelopment())
             {
                 devMode = true;
@@ -145,12 +115,67 @@ namespace backend
 
             app.UseSwagger();
             app.UseSwaggerUI();
-
             app.UseHttpsRedirection();
             app.MapControllers();
+            
+            
 
             AiUtil.GetInstance(); // Assuming this initializes a single instance of a utility or configuration
             await app.RunAsync();
+        }
+
+        // Helper method to print connection string details for debugging
+        private static void PrintConnectionStringDetails(string connectionString)
+        {
+            var user = connectionString.Split(";").FirstOrDefault(x => x.StartsWith("Username="))?.Split("=")[1];
+            var password = connectionString.Split(";").FirstOrDefault(x => x.StartsWith("Password="))?.Split("=")[1];
+            var port = connectionString.Split(";").FirstOrDefault(x => x.StartsWith("Port="))?.Split("=")[1];
+
+            Console.WriteLine($"Connecting to database with user: {user}, password: {password}, port: {port}");
+        }
+
+        // Helper method to configure JWT authentication
+        private static void ConfigureJwtAuthentication(WebApplicationBuilder builder)
+        {
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = SecretsProvider.Instance.JwtIssuer,
+                        ValidAudience = SecretsProvider.Instance.JwtAudience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretsProvider.Instance.JwtKey))
+                    };
+                });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                // Add authorization policies here if needed
+            });
+        }
+
+        // Helper method to apply database migrations
+        private static async Task ApplyDatabaseMigrations(WebApplication app)
+        {
+            using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                await using var context = scope.ServiceProvider.GetRequiredService<DataContext>();
+                await context.Database.MigrateAsync(); // Apply all pending migrations
+            }
+        }
+
+        // Helper method to configure CORS
+        private static void ConfigureCors(WebApplication app)
+        {
+            app.UseCors(b => b
+                .SetIsOriginAllowed(origin => true)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials());
         }
     }
 }

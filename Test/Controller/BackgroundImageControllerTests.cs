@@ -84,7 +84,12 @@ public class BackgroundImageControllerTests : IClassFixture<CustomWebApplication
     [Fact]
     public async Task Test_AddBackgroundImage_ReturnsCreatedImage()
     {
-        var newImage = new CreateBackgroundImage { Base64Image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..." };
+        var newImage = new CreateBackgroundImage
+        {
+            Base64Image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8nEClAAAAmklEQVRIDbWVzU4bZx3XHf/aQYZp5iSpQs6RZKYFh7FVh9WyHAgRHZGlGGFl+9OwyG19NqFMd56FLw8j38if3pxsX8zvYF1kekO4eZh9rHZP7ybbR5XyJ5OYtAsfT9SbxPfb+/B0D9cI6flzZoyVr5F5jQ26pbmrLeC6M9sLk5jmrT/LMghgg5y3w9K2jtRKlCy2RRv53l92Dq3wQakEoVG1Vrqxwh9Ejkt8+qPNe+gZUwXMrt/WjeXoxbe+NqDF7X2HqzDZmP9kttEHFN5NzzcTmA=="
+
+        };
+
         var response = await _client.PostAsJsonAsync("/backgroundimage", newImage);
         response.EnsureSuccessStatusCode();
 
@@ -94,6 +99,7 @@ public class BackgroundImageControllerTests : IClassFixture<CustomWebApplication
         Assert.NotNull(createdImage);
         Assert.Equal(newImage.Base64Image, createdImage.Base64Image);
     }
+
 
     [Fact]
     public async Task Test_DeleteBackgroundImage_ExistingId_ReturnsNoContent()

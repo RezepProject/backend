@@ -1,45 +1,28 @@
 using System.Net;
 using backend.Entities;
-using backend.Controllers.Validators;
 using FluentValidation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class ConfigController : ControllerBase
+    public class ConfigController : GenericController<Config, int>
     {
-        private readonly DataContext ctx;
         private readonly IValidator<CreateConfig> _configValidator;
 
         public ConfigController(DataContext ctx, IValidator<CreateConfig> configValidator)
+            : base(ctx)
         {
-            this.ctx = ctx;
             _configValidator = configValidator;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Config>>> GetConfigs()
-        {
-            return await ctx.Configs.ToListAsync();
-        }
-
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<Config>> GetConfig(int id)
-        {
-            var config = await ctx.Configs.FindAsync(id);
-
-            if (config == null) return NotFound("Config not found!");
-
-            return config;
-        }
-
         [HttpPost]
-        public async Task<ActionResult<Config>> AddConfig(CreateConfig config)
+        public async Task<ActionResult<Config>> AddConfig([FromBody] CreateConfig config)
         {
             // Validate the CreateConfig model
             var validationResult = await _configValidator.ValidateAsync(config);
@@ -57,11 +40,11 @@ namespace backend.Controllers
             ctx.Configs.Add(newConfig);
             await ctx.SaveChangesAsync();
 
-            return CreatedAtAction("GetConfig", new { id = newConfig.Id }, newConfig);
+            return CreatedAtAction(nameof(GetEntity), new { id = newConfig.Id }, newConfig);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> ChangeConfig(int id, CreateConfig config)
+        public async Task<IActionResult> ChangeConfig(int id, [FromBody] CreateConfig config)
         {
             // Validate the CreateConfig model
             var validationResult = await _configValidator.ValidateAsync(config);
@@ -72,7 +55,10 @@ namespace backend.Controllers
 
             var configToUpdate = await ctx.Configs.FindAsync(id);
 
-            if (configToUpdate == null) return NotFound("Config not found!");
+            if (configToUpdate == null)
+            {
+                return NotFound("Config not found!");
+            }
 
             configToUpdate.Title = config.Title;
             configToUpdate.Value = config.Value;
@@ -85,18 +71,6 @@ namespace backend.Controllers
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError);
             }
-
-            return NoContent();
-        }
-
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteConfig(int id)
-        {
-            var config = await ctx.Configs.FindAsync(id);
-            if (config == null) return NotFound("Config not found!");
-
-            ctx.Configs.Remove(config);
-            await ctx.SaveChangesAsync();
 
             return NoContent();
         }

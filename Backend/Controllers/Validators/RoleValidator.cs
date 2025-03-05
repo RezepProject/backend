@@ -7,9 +7,9 @@ namespace backend.Controllers.Validators
     {
         public CreateRoleValidator()
         {
-            RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Role name cannot be empty")
-                .MaximumLength(100).WithMessage("Role name cannot exceed 100 characters");
+            RuleFor(role => role.Name)
+                .NotEmpty().WithMessage("Role name is required.")
+                .MaximumLength(50).WithMessage("Role name cannot exceed 50 characters.");
         }
     }
 }

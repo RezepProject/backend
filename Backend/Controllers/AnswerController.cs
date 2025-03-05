@@ -1,71 +1,52 @@
 using backend.Entities;
 using FluentValidation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace backend.Controllers;
-
-[ApiController]
-[Route("[controller]")]
-[Authorize]
-public class AnswerController(DataContext ctx, IValidator<CreateAnswer> createValidator, IValidator<UpdateAnswer> updateValidator) : ControllerBase
+namespace backend.Controllers
 {
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Answer>>> GetAnswers()
+    public class AnswerController : GenericController<Answer, int>
     {
-        return await ctx.Answers.ToListAsync();
-    }
+        private readonly IValidator<CreateAnswer> _createValidator;
+        private readonly IValidator<UpdateAnswer> _updateValidator;
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<Answer>> GetAnswer(int id)
-    {
-        var answer = await ctx.Answers.FindAsync(id);
+        public AnswerController(DataContext context, IValidator<CreateAnswer> createValidator, IValidator<UpdateAnswer> updateValidator)
+            : base(context)
+        {
+            this._createValidator = createValidator;
+            this._updateValidator = updateValidator;
+        }
 
-        if (answer == null) return NotFound("Answer id not found!");
+        [HttpPost]
+        public async Task<ActionResult<Answer>> AddAnswer(CreateAnswer answer)
+        {
+            var validationResult = await _createValidator.ValidateAsync(answer);
+            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
 
-        return answer;
-    }
+            var newAnswer = new Answer { Text = answer.Text, User = answer.User };
+            ctx.Answers.Add(newAnswer);
+            await ctx.SaveChangesAsync();
 
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> ChangeAnswer(int id, UpdateAnswer answer)
-    {
-        var validationResult = await updateValidator.ValidateAsync(answer);
-        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+            return CreatedAtAction(nameof(GetEntity), new { id = newAnswer.Id }, newAnswer);
+        }
 
-        var answerToUpdate = await ctx.Answers.FindAsync(id);
-        if (answerToUpdate == null) return NotFound("Answer id not found!");
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> ChangeAnswer(int id, UpdateAnswer answer)
+        {
+            var validationResult = await _updateValidator.ValidateAsync(answer);
+            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
 
-        answerToUpdate.Text = answer.Text;
-        answerToUpdate.User = answer.User;
+            var answerToUpdate = await ctx.Answers.FindAsync(id);
+            if (answerToUpdate == null) return NotFound("Answer id not found!");
 
-        ctx.Entry(answerToUpdate).State = EntityState.Modified;
-        await ctx.SaveChangesAsync();
-        return NoContent();
-    }
+            answerToUpdate.Text = answer.Text;
+            answerToUpdate.User = answer.User;
 
-    [HttpPost]
-    public async Task<ActionResult<Answer>> AddAnswer(CreateAnswer answer)
-    {
-        var validationResult = await createValidator.ValidateAsync(answer);
-        if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
-
-        var newAnswer = new Answer { Text = answer.Text, User = answer.User };
-        ctx.Answers.Add(newAnswer);
-        await ctx.SaveChangesAsync();
-
-        return CreatedAtAction("GetAnswer", new { id = newAnswer.Id }, newAnswer);
-    }
-
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> DeleteAnswer(int id)
-    {
-        var answer = await ctx.Answers.FindAsync(id);
-        if (answer == null) return NotFound("Answer id not found!");
-
-        ctx.Answers.Remove(answer);
-        await ctx.SaveChangesAsync();
-
-        return NoContent();
+            ctx.Entry(answerToUpdate).State = EntityState.Modified;
+            await ctx.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }

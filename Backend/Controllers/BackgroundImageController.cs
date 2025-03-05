@@ -1,62 +1,42 @@
 ﻿using backend.Entities;
 using FluentValidation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
-namespace backend.Controllers;
-
-[ApiController]
-[Route("[controller]")]
-[Authorize]
-public class BackgroundImageController(DataContext ctx, IValidator<CreateBackgroundImage> validator) : ControllerBase
+namespace backend.Controllers
 {
-    private readonly IValidator<CreateBackgroundImage> _validator = validator;
-
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<BackgroundImage>>> GetBackgroundImages()
+    [ApiController]
+    [Route("[controller]")]
+    [Authorize]
+    public class BackgroundImageController : GenericController<BackgroundImage, int>
     {
-        var images = await ctx.BackgroundImages.ToListAsync();
-        return Ok(images);
-    }
+        private readonly IValidator<CreateBackgroundImage> _validator;
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<BackgroundImage>> GetBackgroundImage(int id)
-    {
-        var img = await ctx.BackgroundImages.FindAsync(id);
-        return img == null ? NotFound(new { message = "Image ID not found!" }) : Ok(img);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<BackgroundImage>> AddBackgroundImage([FromBody] CreateBackgroundImage bi)
-    {
-        var validationResult = await _validator.ValidateAsync(bi);
-        if (!validationResult.IsValid)
+        public BackgroundImageController(DataContext context, IValidator<CreateBackgroundImage> validator)
+            : base(context)
         {
-            return BadRequest(validationResult.Errors);
+            _validator = validator;
         }
 
-        var backgroundImage = new BackgroundImage
+        [HttpPost]
+        public async Task<ActionResult<BackgroundImage>> AddBackgroundImage([FromBody] CreateBackgroundImage bi)
         {
-            Base64Image = bi.Base64Image
-        };
+            var validationResult = await _validator.ValidateAsync(bi);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors);
+            }
 
-        ctx.BackgroundImages.Add(backgroundImage);
-        await ctx.SaveChangesAsync();
+            var backgroundImage = new BackgroundImage
+            {
+                Base64Image = bi.Base64Image
+            };
 
-        return CreatedAtAction(nameof(GetBackgroundImage), new { id = backgroundImage.Id }, backgroundImage);
-    }
+            ctx.BackgroundImages.Add(backgroundImage);
+            await ctx.SaveChangesAsync();
 
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> DeleteBackgroundImage(int id)
-    {
-        var bi = await ctx.BackgroundImages.FindAsync(id);
-        if (bi == null)
-            return NotFound(new { message = "BackgroundImage ID not found!" });
-
-        ctx.BackgroundImages.Remove(bi);
-        await ctx.SaveChangesAsync();
-
-        return NoContent();
+            return CreatedAtAction(nameof(GetEntity), new { id = backgroundImage.Id }, backgroundImage);
+        }
     }
 }

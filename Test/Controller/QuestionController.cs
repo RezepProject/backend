@@ -102,8 +102,9 @@ namespace Test.Controller
                 }
             };
 
-            var response = await _client.PostAsJsonAsync("/question", newQuestion);
-            response.EnsureSuccessStatusCode();
+
+            var response = await _client.PostAsJsonAsync("/question/add", newQuestion);
+                response.EnsureSuccessStatusCode();
 
             var createdQuestionJson = await response.Content.ReadAsStringAsync();
             var createdQuestion = JsonSerializer.Deserialize<Question>(createdQuestionJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -143,13 +144,20 @@ namespace Test.Controller
             var updatedQuestion = new CreateQuestion
             {
                 Text = "Some random text",
-                Categories = new List<CreateQuestionCategory>(),
+                Categories = new List<CreateQuestionCategory>
+                {
+                    new CreateQuestionCategory
+                    {
+                        Name = "Valid Category Name"
+                    }
+                },
                 Answers = new List<CreateAnswer>()
             };
 
             var response = await _client.PutAsJsonAsync("/question/999", updatedQuestion);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
+
 
         [Fact]
         public async Task Test_DeleteQuestion_ExistingId_ReturnsNoContent()

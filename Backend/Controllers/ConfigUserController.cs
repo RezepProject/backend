@@ -1,7 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 using backend.Entities;
-using backend.Controllers.Validators;
 using backend.Util;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
@@ -13,17 +11,16 @@ namespace backend.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class ConfigUserController : ControllerBase
+    public class ConfigUserController : GenericController<ConfigUser, int>
     {
-        private readonly DataContext ctx;
         private readonly IValidator<CreateUserToken> _createUserValidator;
         private readonly IValidator<ChangeConfigUser> _changeUserValidator;
 
-        public ConfigUserController(DataContext ctx, 
+        public ConfigUserController(DataContext ctx,
                                     IValidator<CreateUserToken> createUserValidator,
                                     IValidator<ChangeConfigUser> changeUserValidator)
+            : base(ctx)
         {
-            this.ctx = ctx;
             _createUserValidator = createUserValidator;
             _changeUserValidator = changeUserValidator;
         }
@@ -37,13 +34,14 @@ namespace backend.Controllers
                 return BadRequest(validationResult.Errors);
             }
 
-            if (await EmailIsUsed(user.Email)) return BadRequest("Email is already used!");
+            if (await EmailIsUsed(user.Email))
+                return BadRequest("Email is already used!");
 
             var userToken = new ConfigUserToken
             {
                 Email = user.Email,
                 RoleId = user.RoleId,
-                CreatedAt = DateTime.Now.ToUniversalTime(),
+                CreatedAt = DateTime.UtcNow,
                 Token = Guid.NewGuid()
             };
 
@@ -55,10 +53,10 @@ namespace backend.Controllers
                 : StatusCode((int)HttpStatusCode.InternalServerError);
         }
 
-        [HttpGet]
+        [HttpGet("all-users")] // Renamed to avoid conflict
         public async Task<ActionResult<IEnumerable<ReturnConfigUser>>> GetUsers()
         {
-            return (await ctx.ConfigUsers.ToListAsync()).Select(user => new ReturnConfigUser
+            return (await ctx.ConfigUsers.AsNoTracking().ToListAsync()).Select(user => new ReturnConfigUser
             {
                 Email = user.Email,
                 FirstName = user.FirstName,
@@ -68,10 +66,10 @@ namespace backend.Controllers
             }).ToList();
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("get-user/{id}")]
         public async Task<ActionResult<ReturnConfigUser>> GetUser(int id)
         {
-            var user = await UserExists(id);
+            var user = await ctx.ConfigUsers.FindAsync(id);
             return user == null
                 ? NotFound("User not found")
                 : new ReturnConfigUser
@@ -93,10 +91,12 @@ namespace backend.Controllers
                 return BadRequest(validationResult.Errors);
             }
 
-            var userToUpdate = await UserExists(id);
-            if (userToUpdate == null) return NotFound("User not found");
+            var userToUpdate = await ctx.ConfigUsers.FindAsync(id);
+            if (userToUpdate == null)
+                return NotFound("User not found");
 
-            if (await EmailIsUsed(user.Email)) return BadRequest("Email is already used");
+            if (await EmailIsUsed(user.Email))
+                return BadRequest("Email is already used");
 
             userToUpdate.Email = user.Email;
             userToUpdate.FirstName = user.FirstName;
@@ -111,26 +111,10 @@ namespace backend.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
-        {
-            var user = await UserExists(id);
-            if (user == null) return NotFound("User not found");
-
-            ctx.ConfigUsers.Remove(user);
-            await ctx.SaveChangesAsync();
-            return NoContent();
-        }
-
-        private async Task<ConfigUser?> UserExists(int id)
-        {
-            return await ctx.ConfigUsers.FindAsync(id);
         }
 
         private async Task<bool> EmailIsUsed(string email)
@@ -142,9 +126,7 @@ namespace backend.Controllers
         private static string CreateHtmlMailTemplate(Guid token)
         {
             var htmlContent = System.IO.File.ReadAllText("Resources/InviteMail.html");
-
             htmlContent = htmlContent.Replace("{GUID}", token.ToString());
-
             return htmlContent;
         }
     }

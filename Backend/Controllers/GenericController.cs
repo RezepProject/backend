@@ -1,49 +1,49 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using backend.Entities;
-using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class GenericController<TEntity, TCreateDto, TUpdateDto> : ControllerBase 
-        where TEntity : class, IEntity
+    public abstract class GenericController<TEntity, TKey> : ControllerBase where TEntity : class
     {
-        protected readonly DataContext _context;
+        protected readonly DataContext ctx;
 
         public GenericController(DataContext context)
         {
-            _context = context;
+            ctx = context;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TEntity>>> GetAll()
+        public async Task<ActionResult<IEnumerable<TEntity>>> GetEntities()
         {
-            return await _context.Set<TEntity>().ToListAsync();
+            return await ctx.Set<TEntity>().ToListAsync();
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<TEntity>> GetById(int id)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<TEntity>> GetEntity(TKey id)
         {
-            var entity = await _context.Set<TEntity>().FindAsync(id);
-            return entity == null ? NotFound("Entity id not found!") : entity;
+            var entity = await ctx.Set<TEntity>().FindAsync(id);
+
+            if (entity == null) return NotFound($"{typeof(TEntity).Name} not found!");
+
+            return entity;
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("{id}")]
+        public virtual async Task<IActionResult> DeleteEntity(TKey id)
         {
-            var entity = await _context.Set<TEntity>().FindAsync(id);
-            if (entity == null) return NotFound("Entity id not found!");
+            var entity = await ctx.Set<TEntity>().FindAsync(id);
+            if (entity == null) return NotFound($"{typeof(TEntity).Name} not found!");
 
-            _context.Set<TEntity>().Remove(entity);
-            await _context.SaveChangesAsync();
+            ctx.Set<TEntity>().Remove(entity);
+            await ctx.SaveChangesAsync();
 
             return NoContent();
         }
     }
 }
-

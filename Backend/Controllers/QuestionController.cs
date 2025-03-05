@@ -1,32 +1,35 @@
 using System.Net;
 using backend.Entities;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FluentValidation;
-using backend.Controllers.Validators;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class QuestionController : ControllerBase
+    public class QuestionController : GenericController<Question, int>
     {
-        private readonly DataContext ctx;
+        private readonly IValidator<CreateQuestion> _createQuestionValidator;
 
-        public QuestionController(DataContext ctx)
+        public QuestionController(DataContext ctx, IValidator<CreateQuestion> createQuestionValidator)
+            : base(ctx)
         {
-            this.ctx = ctx;
+            _createQuestionValidator = createQuestionValidator;
         }
 
-        [HttpGet]
+        [HttpGet("detailed")]
         public async Task<ActionResult<IEnumerable<object>>> GetQuestions()
         {
             var questions = await ctx.Questions
                 .Include(q => q.Answers)
                 .Include(q => q.Categories)
-                .Select(q => new 
+                .Select(q => new
                 {
                     q.Id,
                     q.Text,
@@ -35,7 +38,7 @@ namespace backend.Controllers
                         c.Name,
                         c.Id
                     }).ToList(),
-                    Answers = q.Answers.Select(a => new 
+                    Answers = q.Answers.Select(a => new
                     {
                         a.Id,
                         a.Text,
@@ -47,28 +50,15 @@ namespace backend.Controllers
             return Ok(questions);
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<Question>> GetQuestion(int id)
+        [HttpPost("add")]
+        public async Task<ActionResult<object>> AddQuestion(CreateQuestion question)
         {
-            var question = await ctx.Questions
-                .FindAsync(id);
-
-            if (question == null) return NotFound("Question id not found!");
-
-            return question;
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<Question>> AddQuestion(CreateQuestion question)
-        {
-            // Use existing validator
-            var validator = new CreateQuestionValidator();
-            var validationResult = await validator.ValidateAsync(question);
+            var validationResult = await _createQuestionValidator.ValidateAsync(question);
             if (!validationResult.IsValid)
                 return BadRequest(validationResult.Errors);
 
             List<QuestionCategory> categories = new();
-            
+
             foreach (var category in question.Categories)
             {
                 var categoryEntity = await ctx.QuestionCategories
@@ -100,15 +90,31 @@ namespace backend.Controllers
             ctx.Questions.Add(questionEntity);
             await ctx.SaveChangesAsync();
 
-            return CreatedAtAction("GetQuestion", new { id = questionEntity.Id }, question);
+            // Return a simplified object to avoid circular references
+            var result = new
+            {
+                questionEntity.Id,
+                questionEntity.Text,
+                Categories = questionEntity.Categories.Select(c => new
+                {
+                    c.Id,
+                    c.Name
+                }),
+                Answers = questionEntity.Answers?.Select(a => new
+                {
+                    a.Id,
+                    a.Text,
+                    a.User
+                })
+            };
+
+            return CreatedAtAction(nameof(GetEntity), new { id = questionEntity.Id }, result);
         }
 
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateQuestion(int id, CreateQuestion question)
         {
-            // Use existing validator
-            var validator = new CreateQuestionValidator(); // This can be refactored to an update-specific validator if needed.
-            var validationResult = await validator.ValidateAsync(question);
+            var validationResult = await _createQuestionValidator.ValidateAsync(question);
             if (!validationResult.IsValid)
                 return BadRequest(validationResult.Errors);
 
@@ -150,34 +156,40 @@ namespace backend.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteQuestion(int id)
+        [HttpGet("categories")]
+        public async Task<ActionResult<IEnumerable<QuestionCategory>>> GetCategories()
+        {
+            var categories = await ctx.QuestionCategories.ToListAsync();
+            return Ok(categories);
+        }
+        
+        [HttpDelete("{id}")]
+        public override async Task<IActionResult> DeleteEntity(int id)
         {
             var question = await ctx.Questions
                 .Include(q => q.Answers)
+                .Include(q => q.Categories)
                 .FirstOrDefaultAsync(q => q.Id == id);
-            if (question == null) return NotFound("Question id not found!");
 
-            if (question.Answers != null) ctx.Answers.RemoveRange(question.Answers);
+            if (question == null)
+                return NotFound($"{typeof(Question).Name} not found!");
+
+            // Remove associated answers
+            if (question.Answers != null && question.Answers.Any())
+            {
+                ctx.Answers.RemoveRange(question.Answers);
+            }
+
+            // Remove associations with categories
+            if (question.Categories != null && question.Categories.Any())
+            {
+                question.Categories.Clear();
+            }
 
             ctx.Questions.Remove(question);
             await ctx.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool QuestionExists(int id)
-        {
-            return ctx.Questions.Any(e => e.Id == id);
-        }
-
-        [HttpGet("categories")]
-        public async Task<ActionResult<IEnumerable<QuestionCategory>>> GetCategories()
-        {
-            var categories = await ctx.QuestionCategories
-                .ToListAsync();
-
-            return Ok(categories);
         }
     }
 }

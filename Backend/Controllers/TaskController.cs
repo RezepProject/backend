@@ -2,84 +2,68 @@
 using backend.Controllers.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Controllers;
-
-[ApiController]
-[Route("[controller]")]
-[Authorize]
-public class TaskController : ControllerBase
+namespace backend.Controllers
 {
-    private readonly DataContext ctx;
-
-    public TaskController(DataContext ctx)
+    [ApiController]
+    [Route("[controller]")]
+    [Authorize]
+    public class TaskController : GenericController<EntityTask, int>
     {
-        this.ctx = ctx;
-    }
-
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<EntityTask>>> GetTasks()
-    {
-        return await ctx.Tasks.ToListAsync();
-    }
-
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<EntityTask>> GetTask(int id)
-    {
-        var task = await ctx.Tasks.FindAsync(id);
-        return task == null ? NotFound("Task id not found!") : task;
-    }
-
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> UpdateTask(int id, UpdateTask updatedTask)
-    {
-        var validator = new UpdateTaskValidator();
-        var validationResult = await validator.ValidateAsync(updatedTask);
-        if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
-
-        var task = await ctx.Tasks.FindAsync(id);
-        if (task == null) return NotFound("Task id not found!");
-
-        task.Text = updatedTask.Text;
-        task.Done = updatedTask.Done;
-        ctx.Tasks.Update(task);
-
-        try
+        public TaskController(DataContext ctx) : base(ctx)
         {
+        }
+
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateTask(int id, UpdateTask updatedTask)
+        {
+            // Use the UpdateTaskValidator
+            var validator = new UpdateTaskValidator();
+            var validationResult = await validator.ValidateAsync(updatedTask);
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
+
+            var task = await ctx.Tasks.FindAsync(id);
+            if (task == null) return NotFound("Task id not found!");
+
+            task.Text = updatedTask.Text;
+            task.Done = updatedTask.Done;
+            ctx.Tasks.Update(task);
+
+            try
+            {
+                await ctx.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            return NoContent();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<EntityTask>> CreateTask(CreateTask newTask)
+        {
+            // Use the CreateTaskValidator
+            var validator = new CreateTaskValidator();
+            var validationResult = await validator.ValidateAsync(newTask);
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
+
+            var task = ctx.Tasks.Add(new EntityTask { Text = newTask.Text, Done = newTask.Done });
             await ctx.SaveChangesAsync();
+
+            return CreatedAtAction("GetEntity", new { id = task.Entity.Id }, newTask);
         }
-        catch (DbUpdateConcurrencyException)
+
+        [HttpDelete("{id:int}")]
+        public override async Task<IActionResult> DeleteEntity(int id)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return await base.DeleteEntity(id);
         }
-
-        return NoContent();
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<EntityTask>> CreateTask(CreateTask newTask)
-    {
-        var validator = new CreateTaskValidator();
-        var validationResult = await validator.ValidateAsync(newTask);
-        if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
-
-        var task = ctx.Tasks.Add(new EntityTask { Text = newTask.Text, Done = newTask.Done });
-        await ctx.SaveChangesAsync();
-
-        return CreatedAtAction("GetTask", new { id = task.Entity.Id }, newTask);
-    }
-
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> DeleteTask(int id)
-    {
-        var task = await ctx.Tasks.FindAsync(id);
-        if (task == null) return NotFound("Task id not found!");
-
-        ctx.Tasks.Remove(task);
-        await ctx.SaveChangesAsync();
-        return NoContent();
     }
 }
