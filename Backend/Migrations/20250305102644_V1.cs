@@ -40,6 +40,20 @@ namespace backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "entitytask",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    text = table.Column<string>(type: "text", nullable: false),
+                    done = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_entitytask", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "question",
                 columns: table => new
                 {
@@ -113,20 +127,6 @@ namespace backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_setting", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "task",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    text = table.Column<string>(type: "text", nullable: false),
-                    done = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_task", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -234,7 +234,7 @@ namespace backend.Migrations
             migrationBuilder.InsertData(
                 table: "configuser",
                 columns: new[] { "id", "email", "first_name", "last_name", "password", "refresh_token", "role_id", "token_created", "token_expires" },
-                values: new object[] { 1, "test", "test", "test", "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2", "refresh_token_value", 1, new DateTime(2025, 2, 21, 12, 56, 19, 335, DateTimeKind.Utc).AddTicks(9407), new DateTime(2025, 2, 28, 12, 56, 19, 335, DateTimeKind.Utc).AddTicks(9414) });
+                values: new object[] { 1, "test", "test", "test", "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2", "refresh_token_value", 1, new DateTime(2025, 3, 5, 10, 26, 44, 114, DateTimeKind.Utc).AddTicks(3877), new DateTime(2025, 3, 12, 10, 26, 44, 114, DateTimeKind.Utc).AddTicks(3884) });
 
             migrationBuilder.CreateIndex(
                 name: "ix_answer_question_id",
@@ -276,6 +276,9 @@ namespace backend.Migrations
                 name: "configusertoken");
 
             migrationBuilder.DropTable(
+                name: "entitytask");
+
+            migrationBuilder.DropTable(
                 name: "questionquestioncategory (dictionary<string, object>)");
 
             migrationBuilder.DropTable(
@@ -283,9 +286,6 @@ namespace backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "setting");
-
-            migrationBuilder.DropTable(
-                name: "task");
 
             migrationBuilder.DropTable(
                 name: "role");

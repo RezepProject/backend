@@ -12,7 +12,7 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250221125619_V1")]
+    [Migration("20250305102644_V1")]
     partial class V1
     {
         /// <inheritdoc />
@@ -185,8 +185,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 2, 21, 12, 56, 19, 335, DateTimeKind.Utc).AddTicks(9407),
-                            TokenExpires = new DateTime(2025, 2, 28, 12, 56, 19, 335, DateTimeKind.Utc).AddTicks(9414)
+                            TokenCreated = new DateTime(2025, 3, 5, 10, 26, 44, 114, DateTimeKind.Utc).AddTicks(3877),
+                            TokenExpires = new DateTime(2025, 3, 12, 10, 26, 44, 114, DateTimeKind.Utc).AddTicks(3884)
                         });
                 });
 
@@ -223,6 +223,30 @@ namespace backend.Migrations
                         .HasDatabaseName("ix_configusertoken_role_id");
 
                     b.ToTable("configusertoken", (string)null);
+                });
+
+            modelBuilder.Entity("backend.Entities.EntityTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Done")
+                        .HasColumnType("boolean")
+                        .HasColumnName("done");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("text");
+
+                    b.HasKey("Id")
+                        .HasName("pk_entitytask");
+
+                    b.ToTable("entitytask", (string)null);
                 });
 
             modelBuilder.Entity("backend.Entities.Question", b =>
@@ -394,30 +418,6 @@ namespace backend.Migrations
                             State = true,
                             TalkingSpeed = 0.69999999999999996
                         });
-                });
-
-            modelBuilder.Entity("backend.Entities.Task", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Done")
-                        .HasColumnType("boolean")
-                        .HasColumnName("done");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("text");
-
-                    b.HasKey("Id")
-                        .HasName("pk_task");
-
-                    b.ToTable("task", (string)null);
                 });
 
             modelBuilder.Entity("QuestionQuestionCategory", b =>

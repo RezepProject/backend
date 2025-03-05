@@ -1,4 +1,5 @@
 ﻿using backend.Entities;
+using backend.Controllers.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,8 +9,15 @@ namespace backend.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Authorize]
-public class TaskController(DataContext ctx) : ControllerBase
+public class TaskController : ControllerBase
 {
+    private readonly DataContext ctx;
+
+    public TaskController(DataContext ctx)
+    {
+        this.ctx = ctx;
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EntityTask>>> GetTasks()
     {
@@ -26,6 +34,11 @@ public class TaskController(DataContext ctx) : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateTask(int id, UpdateTask updatedTask)
     {
+        var validator = new UpdateTaskValidator();
+        var validationResult = await validator.ValidateAsync(updatedTask);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
         var task = await ctx.Tasks.FindAsync(id);
         if (task == null) return NotFound("Task id not found!");
 
@@ -48,6 +61,11 @@ public class TaskController(DataContext ctx) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<EntityTask>> CreateTask(CreateTask newTask)
     {
+        var validator = new CreateTaskValidator();
+        var validationResult = await validator.ValidateAsync(newTask);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
         var task = ctx.Tasks.Add(new EntityTask { Text = newTask.Text, Done = newTask.Done });
         await ctx.SaveChangesAsync();
 

@@ -1,10 +1,12 @@
 using System.Text;
+using backend.Controllers.Validators;
 using backend.Util;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using dotenv.net;
+using FluentValidation;
 
 namespace backend
 {
@@ -17,6 +19,19 @@ namespace backend
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration.AddEnvironmentVariables();
+            
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateAnswerValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<UpdateAnswerValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateBackgroundImageValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<ConfigValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<ConfigUserValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<ChangeConfigUserValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateQuestionValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateQuestionCategoryValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateRoleValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<CreateTaskValidator>();
+            builder.Services.AddValidatorsFromAssemblyContaining<UpdateTaskValidator>();
+            
             config = builder.Configuration;
 
             // Check for unit test mode using appsettings
@@ -61,6 +76,7 @@ namespace backend
                                   "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
                                   "Example: \"Bearer {token}\""
                 });
+                
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {

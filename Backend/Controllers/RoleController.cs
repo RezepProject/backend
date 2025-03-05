@@ -2,14 +2,22 @@ using backend.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using backend.Controllers.Validators;
 
 namespace backend.Controllers;
 
 [ApiController]
 [Route("[controller]")]
 [Authorize]
-public class RoleController(DataContext ctx) : ControllerBase
+public class RoleController : ControllerBase
 {
+    private readonly DataContext ctx;
+
+    public RoleController(DataContext ctx)
+    {
+        this.ctx = ctx;
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Role>>> GetRoles()
     {
@@ -26,6 +34,11 @@ public class RoleController(DataContext ctx) : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateRole(int id, CreateRole newRole)
     {
+        var validator = new CreateRoleValidator();
+        var validationResult = await validator.ValidateAsync(newRole);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
         var role = await ctx.Roles.FindAsync(id);
         if (role == null) return NotFound("Role id not found!");
 
@@ -47,6 +60,11 @@ public class RoleController(DataContext ctx) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Role>> CreateRole(CreateRole role)
     {
+        var validator = new CreateRoleValidator();
+        var validationResult = await validator.ValidateAsync(role);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
         var newRole = ctx.Roles.Add(new Role { Name = role.Name });
         await ctx.SaveChangesAsync();
 
