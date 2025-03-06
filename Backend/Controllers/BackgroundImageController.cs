@@ -9,6 +9,7 @@ namespace backend.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
+    [Produces("application/json")]
     public class BackgroundImageController : GenericController<BackgroundImage, int>
     {
         private readonly IValidator<CreateBackgroundImage> _validator;
@@ -20,6 +21,9 @@ namespace backend.Controllers
         }
 
         [HttpPost]
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(BackgroundImage), 201)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
         public async Task<ActionResult<BackgroundImage>> AddBackgroundImage([FromBody] CreateBackgroundImage bi)
         {
             var validationResult = await _validator.ValidateAsync(bi);

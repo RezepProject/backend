@@ -11,6 +11,7 @@ namespace backend.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
+    [Produces("application/json")]
     public class ConfigUserController : GenericController<ConfigUser, int>
     {
         private readonly IValidator<CreateUserToken> _createUserValidator;
@@ -26,7 +27,11 @@ namespace backend.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> PostUser(CreateUserToken user)
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(ConfigUserToken), 201)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
+        [ProducesResponseType(typeof(string), 500)]
+        public async Task<ActionResult> PostUser([FromBody] CreateUserToken user)
         {
             var validationResult = await _createUserValidator.ValidateAsync(user);
             if (!validationResult.IsValid)
@@ -53,10 +58,16 @@ namespace backend.Controllers
                 : StatusCode((int)HttpStatusCode.InternalServerError);
         }
 
-        [HttpGet("all-users")] // Renamed to avoid conflict
+        [HttpGet("all-users")]
+        [ProducesResponseType(typeof(IEnumerable<ReturnConfigUser>), 200)]
+        [ProducesResponseType(404)]
         public async Task<ActionResult<IEnumerable<ReturnConfigUser>>> GetUsers()
         {
-            return (await ctx.ConfigUsers.AsNoTracking().ToListAsync()).Select(user => new ReturnConfigUser
+            var users = await ctx.ConfigUsers.AsNoTracking().ToListAsync();
+            if (users == null || !users.Any())
+                return NotFound("No users found");
+
+            return users.Select(user => new ReturnConfigUser
             {
                 Email = user.Email,
                 FirstName = user.FirstName,
@@ -67,23 +78,31 @@ namespace backend.Controllers
         }
 
         [HttpGet("get-user/{id}")]
+        [ProducesResponseType(typeof(ReturnConfigUser), 200)]
+        [ProducesResponseType(404)]
         public async Task<ActionResult<ReturnConfigUser>> GetUser(int id)
         {
             var user = await ctx.ConfigUsers.FindAsync(id);
-            return user == null
-                ? NotFound("User not found")
-                : new ReturnConfigUser
-                {
-                    Email = user.Email,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Id = user.Id,
-                    RoleId = user.RoleId
-                };
+            if (user == null)
+                return NotFound("User not found");
+
+            return new ReturnConfigUser
+            {
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Id = user.Id,
+                RoleId = user.RoleId
+            };
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, ChangeConfigUser user)
+        [Consumes("application/json")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> PutUser(int id, [FromBody] ChangeConfigUser user)
         {
             var validationResult = await _changeUserValidator.ValidateAsync(user);
             if (!validationResult.IsValid)

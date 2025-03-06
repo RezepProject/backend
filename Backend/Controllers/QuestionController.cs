@@ -13,6 +13,7 @@ namespace backend.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
+    [Produces("application/json")]
     public class QuestionController : GenericController<Question, int>
     {
         private readonly IValidator<CreateQuestion> _createQuestionValidator;
@@ -24,6 +25,7 @@ namespace backend.Controllers
         }
 
         [HttpGet("detailed")]
+        [ProducesResponseType(typeof(IEnumerable<object>), 200)]
         public async Task<ActionResult<IEnumerable<object>>> GetQuestions()
         {
             var questions = await ctx.Questions
@@ -51,7 +53,11 @@ namespace backend.Controllers
         }
 
         [HttpPost("add")]
-        public async Task<ActionResult<object>> AddQuestion(CreateQuestion question)
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(object), 201)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
+        [ProducesResponseType(500)]
+        public async Task<ActionResult<object>> AddQuestion([FromBody] CreateQuestion question)
         {
             var validationResult = await _createQuestionValidator.ValidateAsync(question);
             if (!validationResult.IsValid)
@@ -90,7 +96,6 @@ namespace backend.Controllers
             ctx.Questions.Add(questionEntity);
             await ctx.SaveChangesAsync();
 
-            // Return a simplified object to avoid circular references
             var result = new
             {
                 questionEntity.Id,
@@ -112,7 +117,12 @@ namespace backend.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateQuestion(int id, CreateQuestion question)
+        [Consumes("application/json")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateQuestion(int id, [FromBody] CreateQuestion question)
         {
             var validationResult = await _createQuestionValidator.ValidateAsync(question);
             if (!validationResult.IsValid)
@@ -157,13 +167,17 @@ namespace backend.Controllers
         }
 
         [HttpGet("categories")]
+        [ProducesResponseType(typeof(IEnumerable<QuestionCategory>), 200)]
         public async Task<ActionResult<IEnumerable<QuestionCategory>>> GetCategories()
         {
             var categories = await ctx.QuestionCategories.ToListAsync();
             return Ok(categories);
         }
-        
+
         [HttpDelete("{id}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public override async Task<IActionResult> DeleteEntity(int id)
         {
             var question = await ctx.Questions
@@ -174,13 +188,11 @@ namespace backend.Controllers
             if (question == null)
                 return NotFound($"{typeof(Question).Name} not found!");
 
-            // Remove associated answers
             if (question.Answers != null && question.Answers.Any())
             {
                 ctx.Answers.RemoveRange(question.Answers);
             }
 
-            // Remove associations with categories
             if (question.Categories != null && question.Categories.Any())
             {
                 question.Categories.Clear();

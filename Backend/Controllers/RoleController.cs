@@ -10,6 +10,7 @@ namespace backend.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
+    [Produces("application/json")]
     public class RoleController : GenericController<Role, int>
     {
         public RoleController(DataContext ctx) : base(ctx)
@@ -17,7 +18,12 @@ namespace backend.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateRole(int id, CreateRole newRole)
+        [Consumes("application/json")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateRole(int id, [FromBody] CreateRole newRole)
         {
             var validator = new CreateRoleValidator();
             var validationResult = await validator.ValidateAsync(newRole);
@@ -43,7 +49,11 @@ namespace backend.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Role>> CreateRole(CreateRole role)
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(Role), 201)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
+        [ProducesResponseType(500)]
+        public async Task<ActionResult<Role>> CreateRole([FromBody] CreateRole role)
         {
             var validator = new CreateRoleValidator();
             var validationResult = await validator.ValidateAsync(role);

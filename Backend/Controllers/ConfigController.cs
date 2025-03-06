@@ -11,6 +11,7 @@ namespace backend.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
+    [Produces("application/json")]
     public class ConfigController : GenericController<Config, int>
     {
         private readonly IValidator<CreateConfig> _configValidator;
@@ -22,6 +23,9 @@ namespace backend.Controllers
         }
 
         [HttpPost]
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(Config), 201)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
         public async Task<ActionResult<Config>> AddConfig([FromBody] CreateConfig config)
         {
             // Validate the CreateConfig model
@@ -44,6 +48,10 @@ namespace backend.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [Consumes("application/json")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> ChangeConfig(int id, [FromBody] CreateConfig config)
         {
             // Validate the CreateConfig model

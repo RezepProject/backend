@@ -4,9 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers
 {
+    [ApiController]
+    [Route("[controller]")]
+    [Authorize]
+    [Produces("application/json")]
     public class AnswerController : GenericController<Answer, int>
     {
         private readonly IValidator<CreateAnswer> _createValidator;
@@ -20,7 +25,10 @@ namespace backend.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Answer>> AddAnswer(CreateAnswer answer)
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(Answer), 201)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
+        public async Task<ActionResult<Answer>> AddAnswer([FromBody] CreateAnswer answer)
         {
             var validationResult = await _createValidator.ValidateAsync(answer);
             if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
@@ -33,7 +41,11 @@ namespace backend.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> ChangeAnswer(int id, UpdateAnswer answer)
+        [Consumes("application/json")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(IEnumerable<string>), 400)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> ChangeAnswer(int id, [FromBody] UpdateAnswer answer)
         {
             var validationResult = await _updateValidator.ValidateAsync(answer);
             if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
