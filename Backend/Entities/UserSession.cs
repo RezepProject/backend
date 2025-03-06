@@ -6,9 +6,13 @@ namespace backend.Entities;
 public class UserSession
 {
     public Guid SessionId { get; set; } = Guid.NewGuid();
-    public string ChatGptThreadId { get; set; }
+    public string? ChatGptThreadId { get; set; }
     public bool ProcessPersonalData { get; set; } = false;
     private string? _reservationId;
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public DateOnly? ReservationStart { get; set; }
+    public DateOnly? ReservationEnd { get; set; }
 
     public string? ReservationId
     {
@@ -43,4 +47,13 @@ public class UserSession
         _reservationId = await ApaleoUtil.GetInstance().GetReservationId("BER", from, to, firstName, lastName);
         return _reservationId != null;
     }
+}
+
+public class CreateUserSession
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public DateOnly? ReservationStart { get; set; }
+    public DateOnly? ReservationEnd { get; set; }
+    public bool ProcessPersonalData { get; set; } = false;
 }
