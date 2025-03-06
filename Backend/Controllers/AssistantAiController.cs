@@ -1,9 +1,6 @@
-﻿using System.Net.Http.Headers;
-using System.Text;
-using backend.Entities;
+﻿using backend.Entities;
 using backend.Util;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using Task = backend.Entities.Task;
 
 namespace backend.Controllers;
@@ -67,6 +64,8 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
 
             Console.WriteLine($"Task created: {newTask.Text}"); 
         }
+
+        // TODO: if(response.Contains("{CheckIn-or-CheckOut"))
 
         
         UserResponse userResponse = new UserResponse()

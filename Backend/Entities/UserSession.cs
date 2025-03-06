@@ -1,26 +1,46 @@
-﻿namespace backend.Entities;
+﻿using System.Net.Http.Headers;
+using backend.Util;
+
+namespace backend.Entities;
 
 public class UserSession
 {
     public Guid SessionId { get; set; } = Guid.NewGuid();
     public string ChatGptThreadId { get; set; }
     public bool ProcessPersonalData { get; set; } = false;
-    private string? _reservationUrl;
+    private string? _reservationId;
 
-    public string? ReservationUrl
+    public string? ReservationId
     {
-        get => _reservationUrl;
+        get => _reservationId;
         set
         {
             if (ProcessPersonalData)
             {
-                _reservationUrl = value;
+                _reservationId = value;
             }
         }
     }
 
-    public async Task<Reservation> GetUserReservation()
+    public Task<Reservation?> GetUserReservation()
     {
-        throw new NotImplementedException();
+       return ApaleoUtil.GetInstance().GetReservation(ReservationId);
+    }
+
+    public Task<bool> CheckIn()
+    {
+        return ApaleoUtil.GetInstance().CheckIn(ReservationId);
+    }
+
+    public Task<bool> CheckOut()
+    {
+        return ApaleoUtil.GetInstance().CheckOut(ReservationId);
+    }
+
+    public async Task<bool> GetReservationId(string firstName, string lastName, string from, string to)
+    {
+        if (!ProcessPersonalData) return false;
+        _reservationId = await ApaleoUtil.GetInstance().GetReservationId("BER", from, to, firstName, lastName);
+        return _reservationId != null;
     }
 }

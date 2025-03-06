@@ -29,7 +29,7 @@ public class Reservation
     public bool HasCityTax { get; set; }
     public PayableAmount PayableAmount { get; set; }
     
-    public static Reservation FromJson(string json)
+    public static Reservation? FromJson(string json)
     {
         return JsonSerializer.Deserialize<Reservation>(json);
     }
@@ -69,6 +69,7 @@ public class Money
 
 public class Guest
 {
+    public string FirstName { get; set; }
     public string LastName { get; set; }
 }
 
