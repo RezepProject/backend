@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using backend.Entities;
@@ -42,9 +43,10 @@ public class ApaleoUtil
         var auth = Convert.ToBase64String("WQRH-SP-BOOKINGHERBERT:ZongcbgRr2HuYG8w2u7pn8ViuPaRdn"u8.ToArray());
         client.DefaultRequestHeaders.Add("Authorization", "Basic " + auth);
 
-        var response = await client.PostAsync("https://identity.apaleo.com/connect/token", content);
-        var json = await response.Content.ReadAsStringAsync();
-        var token = JsonSerializer.Deserialize<IApaleoToken>(json);
+        var res = await client.PostAsync("https://identity.apaleo.com/connect/token", content);
+
+        var json = await res.Content.ReadAsStringAsync();
+        var token = JsonSerializer.Deserialize<ApaleoToken>(json);
 
         return token == null ? "" : token.Token;
     }
@@ -54,68 +56,106 @@ public class ApaleoUtil
         if(reservationId == null) return null;
 
         var client = new HttpClient();
-        var response = await client.GetAsync($"https://api.apaleo.com/booking/v1/reservations/{reservationId}&expand=booker");
-
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
-        var json = await response.Content.ReadAsStringAsync();
+
+        var res = await client.GetAsync($"https://api.apaleo.com/booking/v1/reservations/{reservationId}?expand=booker");
+
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _token = await Authenticate();
+            return await GetReservation(reservationId);
+        }
+
+        var json = await res.Content.ReadAsStringAsync();
         return Reservation.FromJson(json);
     }
 
-    public async Task<bool> CheckIn(string reservationId)
+    public async Task<bool> CheckIn(string? reservationId)
     {
-        // check if valid reservation date name etc.
+        if(await IsCheckedIn(reservationId)) return false;
+
         var client = new HttpClient();
         var content = new StringContent("", Encoding.UTF8, "application/json");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
         var res = await client.PutAsync($"https://api.apaleo.com/booking/v1/reservation-actions/{reservationId}/checkin", content);
 
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _token = await Authenticate();
+            return await CheckIn(reservationId);
+        }
+
         return res.IsSuccessStatusCode;
     }
 
-    public async Task<bool> CheckOut(string reservationId)
+    public async Task<bool> CheckOut(string? reservationId)
     {
-        // check if valid reservation date name etc.
+        if (!await IsCheckedIn(reservationId)) return false;
+
         var client = new HttpClient();
         var content = new StringContent("", Encoding.UTF8, "application/json");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
         var res = await client.PutAsync($"https://api.apaleo.com/booking/v1/reservation-actions/{reservationId}/checkout", content);
 
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _token = await Authenticate();
+            return await CheckOut(reservationId);
+        }
+
         return res.IsSuccessStatusCode;
     }
 
-    private async Task<bool> IsCheckedIn(string reservationId)
+    private async Task<bool> IsCheckedIn(string? reservationId)
     {
         var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
         var res = await client.GetAsync($"https://api.apaleo.com/booking/v1/reservations/{reservationId}");
+
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _token = await Authenticate();
+            return await IsCheckedIn(reservationId);
+        }
+
         var json = await res.Content.ReadAsStringAsync();
         var reservation = Reservation.FromJson(json);
 
         return reservation?.Status == "InHouse";
     }
 
-    public async Task<string?> GetReservationId(string property, string from, string to, string firstName,
-        string lastName)
+    public async Task<string?> GetReservationId(string? property, DateOnly? from, DateOnly? to, string? firstName,
+        string? lastName)
     {
+        if (property == null || from == null || to == null || firstName == null || lastName == null) return null;
+
         var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
         var res = await client.GetAsync($"https://api.apaleo.com/booking/v1/reservations?" +
-                                        $"propertyIds={property}&dateFilter=DepartureAndCheckOut&from={ConvertDate(from)}" +
-                                        $"&to={ConvertDate(to)}&pageNumber=1&expand=booker");
+                                        $"propertyIds={property}&dateFilter=DepartureAndCheckOut&from={ConvertDate((DateOnly)from)}%3A00%3A00%2B01%3A00" +
+                                        $"&to={ConvertDate((DateOnly)to)}%3A00%3A00%2B01%3A00&pageNumber=1?expand=booker");
+
+
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _token = await Authenticate();
+            return await GetReservationId(property, from, to, firstName, lastName);
+        }
 
         var json = await res.Content.ReadAsStringAsync();
-        var reservations = JsonSerializer.Deserialize<List<Reservation>>(json);
+        var reservationRes = JsonSerializer.Deserialize<ReservationResponse>(json);
 
-        if (reservations != null && reservations.Count != 0)
-            return reservations.FirstOrDefault(r => r.Booker.FirstName == firstName && r.Booker.LastName == lastName)?.Id;
+        if (reservationRes != null && reservationRes.Count != 0)
+            return reservationRes.Reservations.FirstOrDefault(r => r.PrimaryGuest.FirstName == firstName && r.PrimaryGuest.LastName == lastName)?.Id;
 
         return null;
     }
 
-    private string ConvertDate(string date)
+    private string ConvertDate(DateOnly date)
     {
-        DateTime now = DateTime.UtcNow.AddHours(1); // Austria is UTC+1 in standard time
-        // Format as ISO 8601 without fractional seconds
-        return now.ToString("yyyy-MM-ddTHH:mm:sszzz");
+        DateTime dateTime = date.ToDateTime(new TimeOnly(15, 0)); // Set time to 15:00
+        DateTimeOffset dateTimeOffset = new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime));
+
+        return dateTimeOffset.ToString("yyyy-MM-ddTHH");
     }
 }

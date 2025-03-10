@@ -16,7 +16,16 @@ public class UserSession
 
     public string? ReservationId
     {
-        get => _reservationId;
+        get
+        {
+            if (!ProcessPersonalData) return null;
+            if (_reservationId == null)
+            {
+                _reservationId = GetReservationId().Result;
+            }
+
+            return _reservationId;
+        }
         set
         {
             if (ProcessPersonalData)
@@ -41,11 +50,12 @@ public class UserSession
         return ApaleoUtil.GetInstance().CheckOut(ReservationId);
     }
 
-    public async Task<bool> GetReservationId(string firstName, string lastName, string from, string to)
+    private async Task<string?> GetReservationId()
     {
-        if (!ProcessPersonalData) return false;
-        _reservationId = await ApaleoUtil.GetInstance().GetReservationId("BER", from, to, firstName, lastName);
-        return _reservationId != null;
+        if (!ProcessPersonalData) return null;
+
+        return await ApaleoUtil.GetInstance()
+            .GetReservationId("BER", ReservationStart, ReservationEnd, FirstName, LastName);
     }
 }
 
