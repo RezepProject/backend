@@ -25,7 +25,8 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
         public string Answer { get; set; }
         public string SessionId { get; set; }
         public string TimeNeeded { get; set; }
-        public UserSession? UserSession { get; set; }
+        public Guid? UserSessionId { get; set; }
+        public bool Reservation { get; set; }
     }
 
 
@@ -65,16 +66,51 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
             Console.WriteLine($"Task created: {newTask.Text}"); 
         }
 
-        // TODO: if(response.Contains("{CheckIn-or-CheckOut"))
-
-        
         UserResponse userResponse = new UserResponse()
         {
             Answer = response,
             SessionId = threadId,
             TimeNeeded = (DateTime.Now - start).TotalSeconds.ToString(),
-            UserSession = userSession
+            UserSessionId = userSession.SessionId,
         };
+
+        if (response.Contains("{Reservation"))
+        {
+            // {Reservation {firstName: <firstName>}, {lastName: <lastName>}, {checkinDate: <checkinDate>}, checkoutDate: <checkoutDate>}}}
+            var firstName = response.Split("{firstName: ")[1].Split("},")[0];
+            var lastName = response.Split("{lastName: ")[1].Split("},")[0];
+            var checkinDate = response.Split("{checkinDate: ")[1].Split("},")[0];
+            var checkoutDate = response.Split("{checkoutDate: ")[1].Split("}")[0];
+
+            var session = await ctx.UserSessions.FirstOrDefaultAsync(u => u.SessionId.ToString() == sessionId);
+            if (session == null)
+            {
+                session = new UserSession
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    ReservationStart = DateOnly.Parse(checkinDate),
+                    ReservationEnd = DateOnly.Parse(checkoutDate),
+                    ProcessPersonalData = true
+                };
+                ctx.UserSessions.Add(session);
+
+                userResponse.UserSessionId = session.SessionId;
+            }
+            else
+            {
+                session.FirstName = firstName;
+                session.LastName = lastName;
+                session.ReservationStart = DateOnly.Parse(checkinDate);
+                session.ReservationEnd = DateOnly.Parse(checkoutDate);
+                session.ProcessPersonalData = true;
+            }
+
+            await ctx.SaveChangesAsync();
+
+            userResponse.Reservation = true;
+            userResponse.Answer = response.Split("}}}")[1];
+        }
 
         return Ok(userResponse);
     }
@@ -88,10 +124,15 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
     }
 
     [HttpPost("process-personal-data/{id:guid}")]
-    public async void SetPersonalData(Guid id, [FromBody] bool value)
+    public async Task<ActionResult> SetPersonalData(Guid id, [FromBody] bool value)
     {
         var us = await ctx.UserSessions.FirstOrDefaultAsync(us => us.SessionId == id);
-        if (us != null) us.ProcessPersonalData = value;
-        await ctx.SaveChangesAsync();
+        if (us != null)
+        {
+            us.ProcessPersonalData = value;
+            await ctx.SaveChangesAsync();
+            return Ok();
+        }
+        return NotFound();
     }
 }

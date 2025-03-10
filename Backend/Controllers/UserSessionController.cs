@@ -50,7 +50,7 @@ public class UserSessionController(DataContext ctx) : ControllerBase
         return userSession;
     }
 
-    [HttpGet("reservation/{sessionId:guid}")]
+    [HttpGet("{sessionId:guid}/reservation")]
     public async Task<ActionResult<ReservationDTO>> GetReservation(Guid sessionId)
     {
         var us = await ctx.UserSessions.FirstOrDefaultAsync(u => u.SessionId == sessionId);
@@ -60,7 +60,7 @@ public class UserSessionController(DataContext ctx) : ControllerBase
         return new ReservationDTO(res);
     }
 
-    [HttpPost("reservation/checkin/{sessionId:guid}")]
+    [HttpPost("{sessionId:guid}/reservation/checkin")]
     public async Task<ActionResult<bool>> CheckIn(Guid sessionId)
     {
         var us = await ctx.UserSessions.FirstOrDefaultAsync(u => u.SessionId == sessionId);
@@ -68,7 +68,7 @@ public class UserSessionController(DataContext ctx) : ControllerBase
         return await us.CheckIn();
     }
 
-    [HttpPost("reservation/checkout/{sessionId:guid}")]
+    [HttpPost("{sessionId:guid}/reservation/checkout")]
     public async Task<ActionResult<bool>> CheckOut(Guid sessionId)
     {
         var us = await ctx.UserSessions.FirstOrDefaultAsync(u => u.SessionId == sessionId);
