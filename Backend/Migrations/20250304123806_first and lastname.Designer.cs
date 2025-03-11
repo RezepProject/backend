@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend;
@@ -11,9 +12,11 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250304123806_first and lastname")]
+    partial class firstandlastname
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,8 +185,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 3, 6, 12, 39, 19, 7, DateTimeKind.Utc).AddTicks(6250),
-                            TokenExpires = new DateTime(2025, 3, 13, 12, 39, 19, 7, DateTimeKind.Utc).AddTicks(6257)
+                            TokenCreated = new DateTime(2025, 3, 4, 12, 38, 4, 949, DateTimeKind.Utc).AddTicks(5611),
+                            TokenExpires = new DateTime(2025, 3, 11, 12, 38, 4, 949, DateTimeKind.Utc).AddTicks(5630)
                         });
                 });
 
@@ -425,6 +428,7 @@ namespace backend.Migrations
                         .HasColumnName("session_id");
 
                     b.Property<string>("ChatGptThreadId")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("chat_gpt_thread_id");
 
@@ -444,13 +448,13 @@ namespace backend.Migrations
                         .HasColumnType("date")
                         .HasColumnName("reservation_end");
 
-                    b.Property<string>("ReservationId")
-                        .HasColumnType("text")
-                        .HasColumnName("reservation_id");
-
                     b.Property<DateOnly?>("ReservationStart")
                         .HasColumnType("date")
                         .HasColumnName("reservation_start");
+
+                    b.Property<string>("ReservationUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("reservation_url");
 
                     b.HasKey("SessionId")
                         .HasName("pk_usersession");

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend;
@@ -11,9 +12,11 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250227141526_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,8 +185,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 3, 6, 12, 39, 19, 7, DateTimeKind.Utc).AddTicks(6250),
-                            TokenExpires = new DateTime(2025, 3, 13, 12, 39, 19, 7, DateTimeKind.Utc).AddTicks(6257)
+                            TokenCreated = new DateTime(2025, 2, 27, 14, 15, 25, 299, DateTimeKind.Utc).AddTicks(9156),
+                            TokenExpires = new DateTime(2025, 3, 6, 14, 15, 25, 299, DateTimeKind.Utc).AddTicks(9169)
                         });
                 });
 
@@ -425,32 +428,9 @@ namespace backend.Migrations
                         .HasColumnName("session_id");
 
                     b.Property<string>("ChatGptThreadId")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("chat_gpt_thread_id");
-
-                    b.Property<string>("FirstName")
-                        .HasColumnType("text")
-                        .HasColumnName("first_name");
-
-                    b.Property<string>("LastName")
-                        .HasColumnType("text")
-                        .HasColumnName("last_name");
-
-                    b.Property<bool>("ProcessPersonalData")
-                        .HasColumnType("boolean")
-                        .HasColumnName("process_personal_data");
-
-                    b.Property<DateOnly?>("ReservationEnd")
-                        .HasColumnType("date")
-                        .HasColumnName("reservation_end");
-
-                    b.Property<string>("ReservationId")
-                        .HasColumnType("text")
-                        .HasColumnName("reservation_id");
-
-                    b.Property<DateOnly?>("ReservationStart")
-                        .HasColumnType("date")
-                        .HasColumnName("reservation_start");
 
                     b.HasKey("SessionId")
                         .HasName("pk_usersession");

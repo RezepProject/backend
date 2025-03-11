@@ -55,9 +55,11 @@ public class AiUtil
                            "best as you can. Here is everything you need to know: The event will take place on the 23rd and 24th of January, showcasing the various departments and projects of the school. " +
                            "You don’t have to rewrite every answer, just answer the question faster instead. Our text should not contain lists, just talk like a normal person. " +
                            "Answer in a friendly and helpful way. Ask if you can help with other questions when you finish answering the question." +
-                           "You also can create tasks for the employees to do. Just start you message with '{Task: <task>}' and the user will see it in the frontend. Only create tasks if the user has to do something." +
-                           "When you create a task, you should give the user the information that a task was created after the {}.",
-            name = "Rezep",
+                           "You also can create tasks for the employees to do (but NOT if a user wants to check in and some data is missing). Just start you message with '{Task: <task>}' and the user will see it in the frontend. Only create tasks if the user has to do something." +
+                           "When you create a task, you should give the user the information that a task was created after the {}." +
+                           "Also there is the option for you to add a reservation to the user. Just start your message with '{Reservation {firstName: <firstName>}, {lastName: <lastName>}, {checkinDate: <checkinDate>}, checkoutDate: <checkoutDate>}}}' " +
+                           "and it will be added to the users profile. Only create reservations if the user wants to check in or check out of the hotel (First Name, Last Name, Date of Arrival, Date of Checkout are needed, make the user say the exact date). " +
+                           "If some data is missing, ask the user for specifics before creating the reservation, fill the whole data into the object (into the variables starting and ending with <>.",
             model = "gpt-4o"
         };
 
@@ -143,125 +145,147 @@ public class AiUtil
         var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
         return result["id"]!.ToString();
     }
-    
-    
-    public async Task<(string, string)> AskQuestion(DataContext ctx, string? threadId, string question,
-    string language, bool isClassification = false)
-{
-    _ctx = ctx;
 
-    if (isClassification)
+
+    public async Task<(string, string, UserSession? userSession)> AskQuestion(DataContext ctx, string? threadId,
+        string question,
+        string language, bool isClassification = false, UserSession? userSession = null)
     {
-        var categories = await _ctx.QuestionCategories.Select(c => c.Name).ToListAsync();
-        if (!categories.Any())
+        _ctx = ctx;
+
+        if (isClassification)
         {
-            throw new InvalidOperationException("No categories available for classification.");
-        }
+            var categories = await _ctx.QuestionCategories.Select(c => c.Name).ToListAsync();
+            if (!categories.Any())
+            {
+                throw new InvalidOperationException("No categories available for classification.");
+            }
 
-        string formattedCategories = string.Join(", ", categories);
-        question = $"Classify the following question into one of these categories: {formattedCategories}. The question is: '{question}'. Only reply with the exact category name from the list, nothing else.";
+            string formattedCategories = string.Join(", ", categories);
+            question =
+                $"Classify the following question into one of these categories: {formattedCategories}. The question is: '{question}'. Only reply with the exact category name from the list, nothing else.";
 
-        var classificationData = new
-        {
-            role = "user",
-            content = $"{question}. Use ISO 639-1 standard language code {language} for your answer."
-        };
+            var classificationData = new
+            {
+                role = "user",
+                content = $"{question}. Use ISO 639-1 standard language code {language} for your answer."
+            };
 
-        var content = new StringContent(JsonConvert.SerializeObject(classificationData), Encoding.UTF8,
-            "application/json");
-        var response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/messages", content);
-        var responseContent = await response.Content.ReadAsStringAsync();
+            var content = new StringContent(JsonConvert.SerializeObject(classificationData), Encoding.UTF8,
+                "application/json");
+            var response = await _httpClient.PostAsync(
+                $"https://api.openai.com/v1/threads/{userSession?.ChatGptThreadId ?? threadId}/messages", content);
+            var responseContent = await response.Content.ReadAsStringAsync();
 
-        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+            var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
 
-        var runData = new { assistant_id = _classifyAssistantId };
-        content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
-        response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/runs", content);
-        responseContent = await response.Content.ReadAsStringAsync();
+            var runData = new { assistant_id = _classifyAssistantId };
+            content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
+            response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/runs", content);
+            responseContent = await response.Content.ReadAsStringAsync();
 
-        result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+            result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
 
-        return (result["id"]!.ToString(), threadId ?? "");
-    }
-    else
-    {
-        await UpdateThreads();
-        if (string.IsNullOrEmpty(threadId) || _threads.All(t => t.ThreadId != threadId))
-        {
-            threadId = await GetThread();
-            _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
+            return (result["id"]!.ToString(), threadId ?? "", userSession);
         }
         else
         {
-            _threads.First(t => t.ThreadId == threadId).Time = DateTime.Now;
+            await UpdateThreads();
+            if (string.IsNullOrEmpty(threadId) || _threads.All(t => t.ThreadId != threadId))
+            {
+                threadId = await GetThread();
+                _threads.Add(new ThreadTime { ThreadId = threadId, Time = DateTime.Now });
+            }
+            else
+            {
+                _threads.First(t => t.ThreadId == threadId).Time = DateTime.Now;
+            }
+
+            if (userSession == null)
+            {
+                userSession = new UserSession()
+                {
+                    ChatGptThreadId = threadId
+                };
+                await ctx.UserSessions.AddAsync(userSession);
+            }
+            else
+            {
+                userSession.ChatGptThreadId = string.IsNullOrEmpty(userSession?.ChatGptThreadId)
+                    ? threadId
+                    : userSession.ChatGptThreadId;
+                threadId = userSession.ChatGptThreadId;
+            }
+
+            var tmpCategories = await _ctx.QuestionCategories.ToListAsync();
+            if (tmpCategories.Count != _categories.Count)
+            {
+                _categories = tmpCategories;
+                await DeleteThread(_classifyAssistantThreadId);
+                _classifyAssistantThreadId = "";
+            }
+
+            string[] categories = (await ClassifyQuestion(question)).Split(";");
+            if (!categories.Any())
+            {
+                throw new InvalidOperationException("Failed to classify the question.");
+            }
+
+            var tmpQuestions = await _ctx.Questions
+                .Include(q => q.Categories)
+                .Include(q => q.Answers)
+                .Where(q => q.Categories.Any(c => categories.Contains(c.Name)))
+                .ToListAsync();
+
+            string questionContext = tmpQuestions.Any()
+                ? tmpQuestions
+                    .Select(q => $"Q: {q.Text} A: {string.Join("; ", q.Answers.Select(a => a.Text))}")
+                    .Aggregate((a, b) => $"{a} | {b}")
+                : "";
+
+            question = $"Use this information: {questionContext} to answer the question: {question}";
+
+            var messageData = new
+            {
+                role = "user",
+                content = $"{question}. Use ISO 639-1 standard language code {language} for your answer."
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8,
+                "application/json");
+            var response =
+                await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{userSession.ChatGptThreadId}/messages",
+                    content);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+            await ctx.SaveChangesAsync();
+
+            var runData = new { assistant_id = _assistantId };
+            content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
+            response = await _httpClient.PostAsync(
+                $"https://api.openai.com/v1/threads/{userSession.ChatGptThreadId}/runs", content);
+            responseContent = await response.Content.ReadAsStringAsync();
+
+            result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
+
+            return (result["id"]!.ToString(), threadId, userSession);
         }
-
-        var tmpCategories = await _ctx.QuestionCategories.ToListAsync();
-        if (tmpCategories.Count != _categories.Count)
-        {
-            _categories = tmpCategories;
-            await DeleteThread(_classifyAssistantThreadId);
-            _classifyAssistantThreadId = "";
-        }
-
-        string[] categories = (await ClassifyQuestion(question)).Split(";");
-        if (!categories.Any())
-        {
-            throw new InvalidOperationException("Failed to classify the question.");
-        }
-
-        var tmpQuestions = await _ctx.Questions
-            .Include(q => q.Categories)
-            .Include(q => q.Answers)
-            .Where(q => q.Categories.Any(c => categories.Contains(c.Name)))
-            .ToListAsync();
-
-        string questionContext = tmpQuestions.Any()
-            ? tmpQuestions
-                .Select(q => $"Q: {q.Text} A: {string.Join("; ", q.Answers.Select(a => a.Text))}")
-                .Aggregate((a, b) => $"{a} | {b}")
-            : "";
-
-        question = $"Use this information: {questionContext} to answer the question: {question}";
-
-        var messageData = new
-        {
-            role = "user",
-            content = $"{question}. Use ISO 639-1 standard language code {language} for your answer."
-        };
-
-        var content = new StringContent(JsonConvert.SerializeObject(messageData), Encoding.UTF8,
-            "application/json");
-        var response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/messages", content);
-        var responseContent = await response.Content.ReadAsStringAsync();
-
-        var result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
-
-        var runData = new { assistant_id = _assistantId };
-        content = new StringContent(JsonConvert.SerializeObject(runData), Encoding.UTF8, "application/json");
-        response = await _httpClient.PostAsync($"https://api.openai.com/v1/threads/{threadId}/runs", content);
-        responseContent = await response.Content.ReadAsStringAsync();
-
-        result = (JObject)JsonConvert.DeserializeObject(responseContent)!;
-
-        return (result["id"]!.ToString(), threadId);
     }
-}
 
-public async Task<string> ClassifyQuestion(string question)
-{
-    string classifyThreadId = await GetClassifyThread();
-    if (string.IsNullOrEmpty(classifyThreadId))
+    public async Task<string> ClassifyQuestion(string question)
     {
-        throw new InvalidOperationException("Failed to retrieve a valid classify thread ID.");
+        string classifyThreadId = await GetClassifyThread();
+        if (string.IsNullOrEmpty(classifyThreadId))
+        {
+            throw new InvalidOperationException("Failed to retrieve a valid classify thread ID.");
+        }
+
+        string runId = (await AskQuestion(_ctx, classifyThreadId, question, "en-US", true)).Item1;
+        await WaitForResult(classifyThreadId, runId);
+        string res = await GetResultString(classifyThreadId);
+        return res;
     }
-
-    string runId = (await AskQuestion(_ctx, classifyThreadId, question, "en-US", true)).Item1;
-    await WaitForResult(classifyThreadId, runId);
-    string res = await GetResultString(classifyThreadId);
-    return res;
-}
-
 
 
     public async Task<bool> CheckStatus(string threadId, string runId)
@@ -282,9 +306,15 @@ public async Task<string> ClassifyQuestion(string question)
         return (JObject)JsonConvert.DeserializeObject(responseContent)!;
     }
 
-    public async Task<string> GetResultString(string threadId)
+    public async Task<string> GetResultString(string threadId, UserSession? userSession = null)
     {
-        return (await GetResult(threadId))["data"][0]["content"][0]["text"]["value"].ToString();
+        var result = await GetResult(userSession?.ChatGptThreadId ?? threadId);
+        if (result["data"]?.FirstOrDefault()?["content"]?.FirstOrDefault()?["text"]?["value"] == null)
+        {
+            throw new InvalidOperationException("Unexpected response structure.");
+        }
+
+        return result["data"][0]["content"][0]["text"]["value"].ToString();
     }
 
     public async Task WaitForResult(string threadId, string runId)

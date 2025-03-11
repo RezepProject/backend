@@ -130,6 +130,18 @@ namespace backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "usersession",
+                columns: table => new
+                {
+                    session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    chat_gpt_thread_id = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_usersession", x => x.session_id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "answer",
                 columns: table => new
                 {
@@ -234,7 +246,7 @@ namespace backend.Migrations
             migrationBuilder.InsertData(
                 table: "configuser",
                 columns: new[] { "id", "email", "first_name", "last_name", "password", "refresh_token", "role_id", "token_created", "token_expires" },
-                values: new object[] { 1, "test", "test", "test", "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2", "refresh_token_value", 1, new DateTime(2025, 1, 28, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2279), new DateTime(2025, 2, 4, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2296) });
+                values: new object[] { 1, "test", "test", "test", "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2", "refresh_token_value", 1, new DateTime(2025, 2, 27, 14, 15, 25, 299, DateTimeKind.Utc).AddTicks(9156), new DateTime(2025, 3, 6, 14, 15, 25, 299, DateTimeKind.Utc).AddTicks(9169) });
 
             migrationBuilder.CreateIndex(
                 name: "ix_answer_question_id",
@@ -286,6 +298,9 @@ namespace backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "task");
+
+            migrationBuilder.DropTable(
+                name: "usersession");
 
             migrationBuilder.DropTable(
                 name: "role");

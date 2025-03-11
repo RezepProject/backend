@@ -12,8 +12,8 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250128065430_Initial")]
-    partial class Initial
+    [Migration("20250228070846_undo")]
+    partial class undo
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -185,8 +185,8 @@ namespace backend.Migrations
                             Password = "$2a$11$TxzkGMQgywQjBxMq9YcOoO66hQODh5zJzIg4npGPDzfpcefvKORD2",
                             RefreshToken = "refresh_token_value",
                             RoleId = 1,
-                            TokenCreated = new DateTime(2025, 1, 28, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2279),
-                            TokenExpires = new DateTime(2025, 2, 4, 6, 54, 30, 104, DateTimeKind.Utc).AddTicks(2296)
+                            TokenCreated = new DateTime(2025, 2, 28, 7, 8, 46, 396, DateTimeKind.Utc).AddTicks(4765),
+                            TokenExpires = new DateTime(2025, 3, 7, 7, 8, 46, 396, DateTimeKind.Utc).AddTicks(4773)
                         });
                 });
 
@@ -418,6 +418,33 @@ namespace backend.Migrations
                         .HasName("pk_task");
 
                     b.ToTable("task", (string)null);
+                });
+
+            modelBuilder.Entity("backend.Entities.UserSession", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.Property<string>("ChatGptThreadId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chat_gpt_thread_id");
+
+                    b.Property<bool>("ProcessPersonalData")
+                        .HasColumnType("boolean")
+                        .HasColumnName("process_personal_data");
+
+                    b.Property<string>("ReservationUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("reservation_url");
+
+                    b.HasKey("SessionId")
+                        .HasName("pk_usersession");
+
+                    b.ToTable("usersession", (string)null);
                 });
 
             modelBuilder.Entity("QuestionQuestionCategory", b =>
