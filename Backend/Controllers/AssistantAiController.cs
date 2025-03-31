@@ -74,9 +74,9 @@ public class AssistantAiRouter(DataContext ctx) : ControllerBase
             UserSessionId = userSession.SessionId,
         };
 
-        if (response.Contains("{Reservation"))
+        if (response.Contains("{CheckInOrOut"))
         {
-            // {Reservation {firstName: <firstName>}, {lastName: <lastName>}, {checkinDate: <checkinDate>}, checkoutDate: <checkoutDate>}}}
+            // {CheckInOrOut {firstName: <firstName>}, {lastName: <lastName>}, {checkinDate: <checkinDate>}, checkoutDate: <checkoutDate>}}}
             var firstName = response.Split("{firstName: ")[1].Split("},")[0];
             var lastName = response.Split("{lastName: ")[1].Split("},")[0];
             var checkinDate = response.Split("{checkinDate: ")[1].Split("},")[0];
