@@ -57,7 +57,7 @@ public class AiUtil
                            "Answer in a friendly and helpful way. Ask if you can help with other questions when you finish answering the question." +
                            "You also can create tasks for the employees to do (but NOT if a user wants to check in and some data is missing). Just start you message with '{Task: <task>}' and the user will see it in the frontend. Only create tasks if the user has to do something." +
                            "When you create a task, you should give the user the information that a task was created after the {}." +
-                           "Also there is the option for you to add a reservation to the user. Just start your message with '{Reservation {firstName: <firstName>}, {lastName: <lastName>}, {checkinDate: <checkinDate>}, checkoutDate: <checkoutDate>}}}' " +
+                           "Also there is the option for you to add a reservation to the user. Just start your message with '{CheckInOrOut {firstName: <firstName>}, {lastName: <lastName>}, {checkinDate: <checkinDate>}, checkoutDate: <checkoutDate>}}}' " +
                            "and it will be added to the users profile. Only create reservations if the user wants to check in or check out of the hotel (First Name, Last Name, Date of Arrival, Date of Checkout are needed, make the user say the exact date). " +
                            "If some data is missing, ask the user for specifics before creating the reservation, fill the whole data into the object (into the variables starting and ending with <>.",
             model = "gpt-4o"
@@ -168,7 +168,7 @@ public class AiUtil
             var classificationData = new
             {
                 role = "user",
-                content = $"{question}. Use ISO 639-1 standard language code {language} for your answer."
+                content = $"{question}. Todays date is {DateTime.Now} Use ISO 639-1 standard language code {language} for your answer."
             };
 
             var content = new StringContent(JsonConvert.SerializeObject(classificationData), Encoding.UTF8,
